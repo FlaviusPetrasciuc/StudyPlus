@@ -1,27 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'screens/create_project_screen.dart';
-import 'screens/login_screen.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await Supabase.initialize(
-    url: 'https://lrffrclpulbvqgqprlau.supabase.co',
-    anonKey: 'sb_publishable_ydO2tdQuJBmgkxbtngorEA_kNfcZNR2',
-  );
-
-  runApp(const StudyPlusApp());
+void main() {
+  runApp(const MyApp());
 }
 
-class StudyPlusApp extends StatelessWidget {
-  const StudyPlusApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
+  Widget build(BuildContext context){
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
-    );
+      home: CreateProjectPage()
+        );
   }
 }
