@@ -6,6 +6,7 @@ build/
 .packages
 .pub/
 .pub-cache/
+.metadata
 
 # macOS
 .DS_Store
@@ -19,6 +20,12 @@ android/.gradle/
 .idea/
 .vscode/
 *.iml
+
+# Environment
+.env
+
+# Node
+node_modules/
 
 # Logs
 *.log
