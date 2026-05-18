@@ -14,24 +14,7 @@ class SignUp extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
-                // Top Menu Button
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF007AFF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      // Functionality must be added later for
-                      // the menu button
-                      onPressed: () {},
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 // Header
                 Center(
                   child: Column(
