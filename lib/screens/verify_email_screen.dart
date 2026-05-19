@@ -177,14 +177,18 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         color: Colors.black45,
                       ),
                     ),
-                    GestureDetector(
+                    InkWell(
                       onTap: _handleResend,
-                      child: const Text(
-                        'Resend',
-                        style: TextStyle(
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2979FF),
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+                        child: Text(
+                          'Resend',
+                          style: TextStyle(
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2979FF),
+                          ),
                         ),
                       ),
                     ),
