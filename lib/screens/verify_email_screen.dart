@@ -12,6 +12,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   final List<TextEditingController> _controllers =
   List.generate(4, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  String? _errorMessage;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -25,6 +27,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   }
 
   void _onChanged(String value, int index) {
+    setState(() {
+      _errorMessage = null;
+    });
     if (value.length == 1 && index < 3) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
@@ -32,15 +37,28 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     }
   }
 
-  void _handleVerify() {
+  Future<void> _handleVerify() async {
     final code = _controllers.map((c) => c.text).join();
     if (code.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the full 4-digit code')),
-      );
+      setState(() {
+        _errorMessage = 'Please enter the full 4-digit code';
+      });
       return;
     }
-    // TODO: Add Supabase email verification logic
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Simulated delay — replace with Supabase call later
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    // TODO: Add Supabase verification logic here
   }
 
   void _handleResend() {
@@ -131,23 +149,51 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     );
                   }),
                 ),
-                const SizedBox(height: 40.0),
+                const SizedBox(height: 16.0),
+
+                // Error message
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13.0,
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 8.0),
 
                 // Verify Button
                 SizedBox(
                   width: double.infinity,
                   height: 52.0,
                   child: ElevatedButton(
-                    onPressed: _handleVerify,
+                    onPressed: _isLoading ? null : _handleVerify,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2979FF),
+                      disabledBackgroundColor: const Color(0xFF2979FF),
                       foregroundColor: Colors.white,
+                      disabledForegroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14.0),
                       ),
                     ),
-                    child: const Row(
+                    child: _isLoading
+                        ? const SizedBox(
+                      width: 22.0,
+                      height: 22.0,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                        : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
