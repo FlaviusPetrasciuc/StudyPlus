@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_plus/screens/signup.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/create_project_screen.dart';
 
@@ -20,7 +21,7 @@ class StudyPlusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CreateProjectScreen(),
+      home: SignUp(),
     );
   }
 }

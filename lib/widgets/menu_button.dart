@@ -8,6 +8,8 @@ class MenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 60,
+      height: 60,
       decoration: const BoxDecoration(
         color: Color(0xFF007AFF),
         shape: BoxShape.circle,
