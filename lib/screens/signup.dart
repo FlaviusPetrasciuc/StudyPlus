@@ -38,10 +38,10 @@ class SignUp extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 48),
-                // Full Name Field
+                const SizedBox(height: 28),
+                // First Name Field
                 const Text(
-                  "Full Name",
+                  "First Name",
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -51,7 +51,30 @@ class SignUp extends StatelessWidget {
                 const SizedBox(height: 8),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "John Doe",
+                    hintText: "John",
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Last Name",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xFF1A1C1E),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: "Doe",
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
