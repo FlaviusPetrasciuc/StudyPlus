@@ -1,31 +1,34 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:study_plus/screens/signup.dart';
+import 'package:study_plus/screens/create_project_screen.dart';
 
 class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
+    return StreamBuilder<AuthState>(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          body:
-          Center(
-              child: CircularProgressIndicator()
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         }
 
         final session = snapshot.hasData ? snapshot.data!.session : null;
 
         if (session != null) {
-          return SignUp();
+          // User is signed in
+          return const CreateProjectScreen();
         } else {
-          // implement the rest
-          throw Exception("No session");
+          // User is NOT signed in
+          return const SignUp();
         }
-      }
+      },
     );
   }
 }
