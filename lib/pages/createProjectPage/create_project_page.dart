@@ -173,12 +173,12 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
-      body: SafeArea(
-        child: Stack(
-          children: [
+      body: Stack(
+        children: [
 
-            // ── Scrollable content ────────────────────────────────────────
-            SingleChildScrollView(
+          // ── Scrollable content ────────────────────────────────────────
+          SafeArea(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,37 +249,37 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                 ],
               ),
             ),
+          ), // end SafeArea
 
-            // ── Fixed bottom button ───────────────────────────────────────
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 20,
-              child: SizedBox(
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _showCreateDialog, // opens the popup
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 4,
+          // ── Fixed bottom button — outside SafeArea so it pins to true screen bottom ──
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: SizedBox(
+              height: 54,
+              child: ElevatedButton(
+                onPressed: _showCreateDialog, // opens the popup
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text(
-                    "+ Create New Project",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                  elevation: 4,
+                ),
+                child: const Text(
+                  "+ Create New Project",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
+          ),
 
-          ],
-        ),
+        ],
       ),
     );
   }
