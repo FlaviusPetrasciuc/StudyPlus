@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'widgets/project_card.dart';
-import 'widgets/quick_action_item.dart';
-
 import 'models/project.dart';
 
 class CreateProjectPage extends StatelessWidget {
@@ -9,100 +7,157 @@ class CreateProjectPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final projects = [
+
+    // ── Sample data ───────────────────────────────────────────────────
+    // All values here flow into ProjectCard and drive the progress bar,
+    // percentage, task count, and days left dynamically via the model getter.
+    final List<Project> projects = [
       Project(
         title: "Mobile App Redesign",
         tasksDone: 23,
-        totalTasks: 35,
+        totalTasks: 35,   // progress = 23/35 = 0.657 → shows 66%
         daysLeft: 18,
       ),
       Project(
         title: "Website Migration",
         tasksDone: 15,
-        totalTasks: 36,
+        totalTasks: 36,   // progress = 15/36 = 0.416 → shows 42%
         daysLeft: 31,
+      ),
+      Project(
+        title: "Brand Identity",
+        tasksDone: 8,
+        totalTasks: 20,   // progress = 8/20 = 0.40 → shows 40%
+        daysLeft: 45,
       ),
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      // ── Light grey page background (matches new design) ─────────────
+      backgroundColor: const Color(0xFFF2F4F7),
+
       body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                    "Projects",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
+        child: Stack(
+          children: [
 
-                const SizedBox(height: 6),
+            // ── Scrollable content ──────────────────────────────────
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              // Bottom padding of 100 prevents last card hiding behind
+              // the fixed "Create New Project" button
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-                const Text(
-                  "Manage and track your ongoing work",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
+                  // ── Header row: title + menu button ──────────────
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-                const SizedBox(height: 25),
+                      // Left: title + subtitle
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            "Projects",
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Manage and track your ongoing work",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
 
-                //4 quick actions (Calendar, Documents, Meetings, Analytics)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    QuickActionItem(icon: Icons.calendar_month, label: "Calendar"),
-                    QuickActionItem(icon: Icons.folder, label: "Documents"),
-                    QuickActionItem(icon: Icons.people, label: "Meetings"),
-                    QuickActionItem(icon: Icons.bar_chart, label: "Analytics")
-                  ],
-                ),
-
-                const SizedBox(height: 30),
-
-                const Text(
-                  "Active Projects",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 15),
-
-                Column(
-                  children: projects.map((project) =>
-                      ProjectCard(project: project)).toList(),
-                ),
-
-                const SizedBox(height: 30),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                      onPressed: () {/* later: navigate to create-project form */},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      // Right: circular blue menu button (placeholder — no action yet)
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,   // makes it a perfect circle
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.menu,             // ≡ hamburger icon
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            // TODO: hook up drawer or bottom sheet later
+                          },
                         ),
                       ),
+                    ],
+                  ),
 
-                    child: const Text(
-                      "+ Create New Project",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white
-                      ),
+                  const SizedBox(height: 28),
+
+                  // ── Section heading ───────────────────────────────
+                  const Text(
+                    "Active Projects",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Project cards ─────────────────────────────────
+                  // .map() loops over the list and creates one ProjectCard per project.
+                  // Each card receives its own Project object; all data is dynamic.
+                  Column(
+                    children: projects
+                        .map((project) => ProjectCard(project: project))
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Fixed "Create New Project" button at the bottom ─────
+            // Positioned sits inside the Stack, pinned to the bottom edge.
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 20,
+              child: SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // TODO: navigate to create-project form
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: const Text(
+                    "+ Create New Project",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 20),
-
-              ],
+              ),
             ),
-          ),
+
+          ],
+        ),
       ),
     );
   }
