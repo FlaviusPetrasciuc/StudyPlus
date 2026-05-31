@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/generated_task.dart';
 import '../services/ai_plan_service.dart';
 import '../widgets/ai_loading_screen.dart';
+import '../widgets/menu_button.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -126,25 +127,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0A84FF),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.18),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.menu,
-                      color: Colors.white,
-                      size: 30,
-                    ),
+                  MenuButton(
+                    onPressed: () {
+                      // Handle menu click
+                    },
                   ),
                 ],
               ),
