@@ -3,6 +3,8 @@ import 'package:study_plus/auth/auth_gate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/create_project_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/verify_email_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
