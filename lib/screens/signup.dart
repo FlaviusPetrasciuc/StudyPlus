@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_screen.dart';
+import 'verify_email_screen.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -64,7 +66,11 @@ class _SignUpState extends State<SignUp> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created.')),
+          const SnackBar(content: Text('Account created. Please verify your email.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const VerifyEmailScreen()),
         );
 
         Navigator.pop(context);
@@ -321,6 +327,7 @@ class _SignUpState extends State<SignUp> {
                 const SizedBox(height: 32),
 
                 Center(
+<<<<<<< HEAD
                   child: InkWell(
                     onTap: _goToSignIn,
                     borderRadius: BorderRadius.circular(8),
@@ -333,6 +340,30 @@ class _SignUpState extends State<SignUp> {
                           color: Color(0xFF007AFF),
                           fontWeight: FontWeight.bold,
                         ),
+=======
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                    child: RichText(
+                      text: const TextSpan(
+                        style: TextStyle(fontSize: 14, color: Color(0xFF6C7278)),
+                        children: [
+                          TextSpan(text: "Already have an account? "),
+                          TextSpan(
+                            text: "Sign In",
+                            style: TextStyle(
+                              color: Color(0xFF007AFF),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+>>>>>>> origin/develop
                       ),
                     ),
                   ),

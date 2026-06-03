@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'create_project_screen.dart';
-import 'signup.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -254,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Forgot Password
                   GestureDetector(
                     onTap: () {
-                      // TODO: Forgot password page
+                      // TODO: Navigate to forgot password page
                     },
                     child: const Text(
                       'Forgot Password?',
@@ -328,40 +327,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Sign Up link
                   Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.black45,
-                          ),
+                    child: RichText(
+                      text: TextSpan(
+                        text: "Don't have an account? ",
+                        style: const TextStyle(
+                          fontSize: 13.0,
+                          color: Colors.black45,
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SignUp(),
+                        children: [
+                          WidgetSpan(
+                            child: GestureDetector(
+                              onTap: () {
+                                // TODO: Navigate to sign up page
+                              },
+                              child: const Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF2979FF),
+                                ),
                               ),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF2979FF),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
