@@ -127,9 +127,13 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       ),
                     ),
                   ),
-                  MenuButton(
-                    onPressed: () {
-                      // Handle menu click
+                  Builder(
+                    builder: (context) {
+                      return MenuButton(
+                        onPressed: () {
+                          Scaffold.of(context).openEndDrawer();
+                        },
+                      );
                     },
                   ),
                 ],

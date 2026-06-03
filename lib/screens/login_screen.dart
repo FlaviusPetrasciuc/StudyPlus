@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'create_project_screen.dart';
+import 'signup.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,9 +26,20 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const CreateProjectScreen()),
+        MaterialPageRoute(
+          builder: (context) => const CreateProjectScreen(),
+        ),
       );
     }
+  }
+
+  void _goToSignUp() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SignUp(),
+      ),
+    );
   }
 
   @override
@@ -37,13 +49,15 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 40.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   const Center(
                     child: Text(
                       'Welcome Back',
@@ -57,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Subtitle
                   const Center(
                     child: Text(
                       'Sign in to continue your projects',
@@ -70,7 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40.0),
 
-                  // Email label
                   const Text(
                     'Email',
                     style: TextStyle(
@@ -81,7 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Email field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -89,10 +100,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your email';
                       }
-                      final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+                      final emailRegex = RegExp(
+                        r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      );
+
                       if (!emailRegex.hasMatch(value.trim())) {
                         return 'Please enter a valid email address';
                       }
+
                       return null;
                     },
                     decoration: InputDecoration(
@@ -140,7 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20.0),
 
-                  // Password label
                   const Text(
                     'Password',
                     style: TextStyle(
@@ -151,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Password field
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -159,9 +173,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
                       }
+
                       if (value.length < 6) {
                         return 'Password must be at least 6 characters';
                       }
+
                       return null;
                     },
                     decoration: InputDecoration(
@@ -223,10 +239,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 12.0),
 
-                  // Forgot Password
                   GestureDetector(
                     onTap: () {
-                      // TODO: Navigate to forgot password page
+                      debugPrint("FORGOT PASSWORD CLICKED");
                     },
                     child: const Text(
                       'Forgot Password?',
@@ -239,7 +254,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 28.0),
 
-                  // Sign In Button
                   SizedBox(
                     width: double.infinity,
                     height: 52.0,
@@ -270,34 +284,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 24.0),
 
-                  // Sign Up link
                   Center(
-                    child: RichText(
-                      text: TextSpan(
-                        text: "Don't have an account? ",
-                        style: const TextStyle(
-                          fontSize: 13.0,
-                          color: Colors.black45,
-                        ),
-                        children: [
-                          WidgetSpan(
-                            child: GestureDetector(
-                              onTap: () {
-                                // TODO: Navigate to sign up page
-                              },
-                              child: const Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF2979FF),
-                                ),
-                              ),
-                            ),
+                    child: InkWell(
+                      onTap: _goToSignUp,
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: Text(
+                          "Don't have an account? Sign Up",
+                          style: TextStyle(
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2979FF),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

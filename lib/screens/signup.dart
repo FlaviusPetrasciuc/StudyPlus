@@ -13,7 +13,7 @@ class _SignUpState extends State<SignUp> {
   final _passwordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -28,23 +28,27 @@ class _SignUpState extends State<SignUp> {
       final firstName = _firstNameController.text.trim();
       final lastName = _lastNameController.text.trim();
 
-      if (email.isEmpty || password.isEmpty || firstName.isEmpty || lastName.isEmpty) {
+      if (email.isEmpty ||
+          password.isEmpty ||
+          firstName.isEmpty ||
+          lastName.isEmpty) {
         throw Exception("Please fill in all fields");
       }
 
-      // Email format validation
       final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
       if (!emailRegex.hasMatch(email)) {
         throw Exception("Please enter a valid email address");
       }
 
-      // Password validation
       if (password.length < 8) {
         throw Exception("Password must be at least 8 characters long");
       }
+
       if (!password.contains(RegExp(r'[0-9]'))) {
         throw Exception("Password must contain at least one number");
       }
+
       if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
         throw Exception("Password must contain at least one special character");
       }
@@ -62,17 +66,25 @@ class _SignUpState extends State<SignUp> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Account created.')),
         );
+
+        Navigator.pop(context);
       }
     } on AuthException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(error.message),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(error.toString()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -82,6 +94,10 @@ class _SignUpState extends State<SignUp> {
         });
       }
     }
+  }
+
+  void _goToSignIn() {
+    Navigator.pop(context);
   }
 
   @override
@@ -105,9 +121,9 @@ class _SignUpState extends State<SignUp> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 60),
-                Center(
+                const Center(
                   child: Column(
-                    children: const [
+                    children: [
                       Text(
                         "Create Account",
                         style: TextStyle(
@@ -128,6 +144,7 @@ class _SignUpState extends State<SignUp> {
                   ),
                 ),
                 const SizedBox(height: 28),
+
                 const Text(
                   "First Name",
                   style: TextStyle(
@@ -144,14 +161,18 @@ class _SignUpState extends State<SignUp> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
+
                 const Text(
                   "Last Name",
                   style: TextStyle(
@@ -168,14 +189,18 @@ class _SignUpState extends State<SignUp> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
+
                 const Text(
                   "Email",
                   style: TextStyle(
@@ -193,14 +218,18 @@ class _SignUpState extends State<SignUp> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
+
                 const Text(
                   "Password",
                   style: TextStyle(
@@ -231,14 +260,18 @@ class _SignUpState extends State<SignUp> {
                       },
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 8),
+
                 const Text(
                   "Must be at least 8 characters, include a number and a special character",
                   style: TextStyle(
@@ -246,7 +279,9 @@ class _SignUpState extends State<SignUp> {
                     color: Color(0xFF6C7278),
                   ),
                 ),
+
                 const SizedBox(height: 40),
+
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -261,44 +296,48 @@ class _SignUpState extends State<SignUp> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Text(
-                                "Create Account",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                            ],
+                        : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Create Account",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+
                 const SizedBox(height: 32),
+
                 Center(
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(fontSize: 14, color: Color(0xFF6C7278)),
-                        children: [
-                          TextSpan(text: "Already have an account? "),
-                          TextSpan(
-                            text: "Sign In",
-                            style: TextStyle(
-                              color: Color(0xFF007AFF),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                  child: InkWell(
+                    onTap: _goToSignIn,
+                    borderRadius: BorderRadius.circular(8),
+                    child: const Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: Text(
+                        "Already have an account? Sign In",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF007AFF),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
               ],
             ),
