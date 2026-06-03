@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_screen.dart';
+import 'verify_email_screen.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -61,7 +62,11 @@ class _SignUpState extends State<SignUp> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created.')),
+          const SnackBar(content: Text('Account created. Please verify your email.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const VerifyEmailScreen()),
         );
       }
     } on AuthException catch (error) {
