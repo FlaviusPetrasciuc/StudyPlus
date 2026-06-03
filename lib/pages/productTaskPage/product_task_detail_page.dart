@@ -333,7 +333,7 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                     width: 40, height: 40,
                     decoration: const BoxDecoration(
                         color: Color(0xFF2563EB), shape: BoxShape.circle),
-                    child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+                    child: const Icon(Icons.menu, color: Colors.white, size: 20),
                   ),
                 ],
               ),
