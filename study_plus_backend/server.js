@@ -90,6 +90,26 @@ Requirements:
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+app.post("/projects/:projectId/invite-code", (req, res) => {
+  const { projectId } = req.params;
+
+  const randomPart = Math.random()
+    .toString(36)
+    .substring(2, 6)
+    .toUpperCase();
+
+  const year = new Date().getFullYear();
+
+  const inviteCode = `PROJ-${year}-${randomPart}`;
+
+  res.json({
+    projectId,
+    inviteCode,
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

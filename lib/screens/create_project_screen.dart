@@ -3,7 +3,6 @@ import '../models/generated_task.dart';
 import '../services/ai_plan_service.dart';
 import '../widgets/ai_loading_screen.dart';
 import '../widgets/menu_button.dart';
-import '../widgets/navigation_drawer.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -106,7 +105,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F5FA),
-      endDrawer: CustomNavigationDrawer(activePage: 'New Project'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -129,7 +127,15 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       ),
                     ),
                   ),
-                  const MenuButton(),
+                  Builder(
+                    builder: (context) {
+                      return MenuButton(
+                        onPressed: () {
+                          Scaffold.of(context).openEndDrawer();
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'create_project_screen.dart';
 import 'signup.dart';
 
@@ -15,8 +14,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
-  String? _errorMessage;
 
   @override
   void dispose() {
@@ -25,37 +22,24 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSignIn() async {
+  void _handleSignIn() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      try {
-        await Supabase.instance.client.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
-
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateProjectScreen()),
-          );
-        }
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Invalid email or password. Please try again.';
-        });
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CreateProjectScreen(),
+        ),
+      );
     }
+  }
+
+  void _goToSignUp() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SignUp(),
+      ),
+    );
   }
 
   @override
@@ -65,13 +49,15 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 40.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   const Center(
                     child: Text(
                       'Welcome Back',
@@ -85,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Subtitle
                   const Center(
                     child: Text(
                       'Sign in to continue your projects',
@@ -98,7 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40.0),
 
-                  // Email label
                   const Text(
                     'Email',
                     style: TextStyle(
@@ -109,7 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Email field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -117,10 +100,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your email';
                       }
-                      final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+                      final emailRegex = RegExp(
+                        r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      );
+
                       if (!emailRegex.hasMatch(value.trim())) {
                         return 'Please enter a valid email address';
                       }
+
                       return null;
                     },
                     decoration: InputDecoration(
@@ -168,7 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20.0),
 
-                  // Password label
                   const Text(
                     'Password',
                     style: TextStyle(
@@ -179,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Password field
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -187,9 +173,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
                       }
+
                       if (value.length < 6) {
                         return 'Password must be at least 6 characters';
                       }
+
                       return null;
                     },
                     decoration: InputDecoration(
@@ -251,10 +239,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 12.0),
 
-                  // Forgot Password
                   GestureDetector(
                     onTap: () {
-                      // TODO: Navigate to forgot password page
+                      debugPrint("FORGOT PASSWORD CLICKED");
                     },
                     child: const Text(
                       'Forgot Password?',
@@ -267,47 +254,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 28.0),
 
-                  // Error message
-                  if (_errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13.0,
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-
-                  // Sign In Button
                   SizedBox(
                     width: double.infinity,
                     height: 52.0,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleSignIn,
+                      onPressed: _handleSignIn,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2979FF),
-                        disabledBackgroundColor: const Color(0xFF2979FF),
                         foregroundColor: Colors.white,
-                        disabledForegroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.0),
                         ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                        width: 22.0,
-                        height: 22.0,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                          : const Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
@@ -324,39 +284,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 24.0),
 
-                  // Sign Up link
                   Center(
-                    child: RichText(
-                      text: TextSpan(
-                        text: "Don't have an account? ",
-                        style: const TextStyle(
-                          fontSize: 13.0,
-                          color: Colors.black45,
-                        ),
-                        children: [
-                          WidgetSpan(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SignUp(),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'Sign Up',
-                                style: TextStyle(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF2979FF),
-                                ),
-                              ),
-                            ),
+                    child: InkWell(
+                      onTap: _goToSignUp,
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: Text(
+                          "Don't have an account? Sign Up",
+                          style: TextStyle(
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2979FF),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
