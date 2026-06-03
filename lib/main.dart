@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/create_project_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/invite_team_members_screen.dart';
+import 'screens/verify_email_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,16 +21,9 @@ class StudyPlusApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-
-      // App starts on LoginScreen
-      home: const LoginScreen(),
-
-      routes: {
-        '/invite-team-members': (context) =>
-        const InviteTeamMembersScreen(),
-      },
+      home: LoginScreen(),
     );
   }
 }
