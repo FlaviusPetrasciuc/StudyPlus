@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'create_project_screen.dart';
+import 'signup.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -338,7 +339,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           WidgetSpan(
                             child: GestureDetector(
                               onTap: () {
-                                // TODO: Navigate to sign up page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SignUp(),
+                                  ),
+                                );
                               },
                               child: const Text(
                                 'Sign Up',

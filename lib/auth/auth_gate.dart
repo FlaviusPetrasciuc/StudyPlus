@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:study_plus/screens/signup.dart';
+import 'package:study_plus/screens/login_screen.dart';
 import 'package:study_plus/screens/create_project_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -26,7 +26,7 @@ class AuthGate extends StatelessWidget {
           return const CreateProjectScreen();
         } else {
           // User is NOT signed in
-          return const SignUp();
+          return const LoginScreen();
         }
       },
     );
