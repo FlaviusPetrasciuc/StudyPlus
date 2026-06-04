@@ -40,8 +40,17 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
-            _buildTabBar(),
+            // White background covers the header + tab bar section
+            Container(
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  _buildTabBar(),
+                ],
+              ),
+            ),
             Expanded(child: _buildTabContent()),
           ],
         ),
