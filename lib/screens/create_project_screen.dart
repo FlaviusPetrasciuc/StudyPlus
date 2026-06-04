@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/generated_task.dart';
 import '../services/ai_plan_service.dart';
+import '../widgets/ai_loading_screen.dart';
 import '../widgets/menu_button.dart';
+import '../widgets/navigation_drawer.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -63,10 +65,16 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     if (!validateInput()) return;
 
     setState(() {
-      isLoading = true;
       errorMessage = null;
       generatedTasks = [];
     });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AILoadingScreen(),
+      ),
+    );
 
     try {
       final tasks = await aiPlanService.generatePlan(
@@ -74,16 +82,22 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         details: projectDetailsController.text.trim(),
       );
 
+      if (!mounted) return;
+
+      Navigator.pop(context);
+
       setState(() {
         generatedTasks = tasks;
       });
     } catch (e) {
+
+      if (!mounted) return;
+
+      Navigator.pop(context);
+
       setState(() {
-        errorMessage = 'Failed to generate plan. Make sure your backend is running.';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
+        errorMessage =
+        'Failed to generate plan. Make sure your backend is running.';
       });
     }
   }
@@ -92,6 +106,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F5FA),
+      endDrawer: CustomNavigationDrawer(activePage: 'New Project'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -114,11 +129,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       ),
                     ),
                   ),
-                  MenuButton(
-                    onPressed: () {
-                      // Handle menu click
-                    },
-                  ),
+                  const MenuButton(),
                 ],
               ),
 
@@ -201,7 +212,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 width: double.infinity,
                 height: 68,
                 child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : generateAiPlan,
+                  onPressed: generateAiPlan,
                   icon: isLoading
                       ? const SizedBox(
                     width: 24,
