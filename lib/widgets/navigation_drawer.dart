@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../auth/auth_service.dart';
 import '../screens/login_screen.dart';
+import '../screens/team_analytics.dart';
+import '../screens/create_project_screen.dart';
+import '../screens/project_details.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -57,18 +60,19 @@ class CustomNavigationDrawer extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             _buildSectionTitle('MAIN'),
-            _buildMenuItem('Dashboard'),
-            _buildMenuItem('New Project'),
-            _buildMenuItem('Calendar'),
-            _buildMenuItem('Documents'),
-            _buildMenuItem('Meetings'),
+            _buildMenuItem(context, 'Dashboard'),
+            _buildMenuItem(context, 'New Project'),
+            _buildMenuItem(context, 'Project Details'),
+            _buildMenuItem(context, 'Calendar'),
+            _buildMenuItem(context, 'Documents'),
+            _buildMenuItem(context, 'Meetings'),
             const SizedBox(height: 30),
             _buildSectionTitle('TEAM'),
-            _buildMenuItem('Team Dashboard'),
-            _buildMenuItem('Team Analytics'),
-            _buildMenuItem('Activity Feed'),
-            _buildMenuItem('Task Assignment'),
-            _buildMenuItem('Team Invite'),
+            _buildMenuItem(context, 'Team Dashboard'),
+            _buildMenuItem(context, 'Team Analytics'),
+            _buildMenuItem(context, 'Activity Feed'),
+            _buildMenuItem(context, 'Task Assignment'),
+            _buildMenuItem(context, 'Team Invite'),
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 20),
@@ -137,7 +141,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(String title) {
+  Widget _buildMenuItem(BuildContext context, String title) {
     final bool isActive = activePage == title;
 
     return Container(
@@ -151,7 +155,28 @@ class CustomNavigationDrawer extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Placeholder for navigation. To be added
+            if (isActive) {
+              Navigator.pop(context);
+              return;
+            }
+
+            Widget nextPage;
+            if (title == 'Team Analytics') {
+              nextPage = const TeamAnalytics();
+            } else if (title == 'New Project' || title == 'Dashboard') {
+              nextPage = const CreateProjectScreen();
+            } else if (title == 'Project Details') {
+              nextPage = const ProjectDetails();
+            } else {
+              // Other pages are placeholders
+              Navigator.pop(context);
+              return;
+            }
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => nextPage),
+            );
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
