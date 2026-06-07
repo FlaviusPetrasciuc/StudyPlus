@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../auth/auth_service.dart';
 import '../screens/login_screen.dart';
-import '../screens/team_analytics.dart';
 import '../screens/create_project_screen.dart';
 import '../screens/project_details.dart';
 
@@ -162,13 +161,12 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             Widget nextPage;
             if (title == 'Team Analytics') {
-              nextPage = const TeamAnalytics();
+              nextPage = const ProjectDetails(initialTabIndex: 2);
             } else if (title == 'New Project' || title == 'Dashboard') {
               nextPage = const CreateProjectScreen();
             } else if (title == 'Project Details') {
-              nextPage = const ProjectDetails();
+              nextPage = const ProjectDetails(initialTabIndex: 0);
             } else {
-              // Other pages are placeholders
               Navigator.pop(context);
               return;
             }

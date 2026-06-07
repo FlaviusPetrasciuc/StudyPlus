@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/generated_task.dart';
 import '../services/ai_plan_service.dart';
+import '../services/task_service.dart';
 import '../widgets/ai_loading_screen.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
@@ -89,6 +90,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       setState(() {
         generatedTasks = tasks;
       });
+      
+      // Save tasks to service
+      TaskService().setTasks(tasks);
     } catch (e) {
 
       if (!mounted) return;
