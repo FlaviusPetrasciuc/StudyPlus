@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/generated_task.dart';
 import '../services/ai_plan_service.dart';
 import '../widgets/ai_loading_screen.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
+import 'project_calendar_screen.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -18,9 +18,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
   final AiPlanService aiPlanService = AiPlanService();
 
-  bool isLoading = false;
   String? errorMessage;
-  List<GeneratedTask> generatedTasks = [];
 
   @override
   void dispose() {
@@ -64,11 +62,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   Future<void> generateAiPlan() async {
     if (!validateInput()) return;
 
-    setState(() {
-      errorMessage = null;
-      generatedTasks = [];
-    });
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -77,7 +70,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     );
 
     try {
-      final tasks = await aiPlanService.generatePlan(
+      final projectPlan = await aiPlanService.generatePlan(
         title: projectNameController.text.trim(),
         details: projectDetailsController.text.trim(),
       );
@@ -86,18 +79,19 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
       Navigator.pop(context);
 
-      setState(() {
-        generatedTasks = tasks;
-      });
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProjectCalendarScreen(projectPlan: projectPlan),
+        ),
+      );
     } catch (e) {
-
       if (!mounted) return;
 
       Navigator.pop(context);
 
       setState(() {
-        errorMessage =
-        'Failed to generate plan. Make sure your backend is running.';
+        errorMessage = 'Failed to generate plan. Make sure your backend is running.';
       });
     }
   }
@@ -129,7 +123,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       ),
                     ),
                   ),
-<<<<<<< HEAD
                   Builder(
                     builder: (context) {
                       return MenuButton(
@@ -139,9 +132,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       );
                     },
                   ),
-=======
-                  const MenuButton(),
->>>>>>> origin/develop
                 ],
               ),
 
@@ -225,19 +215,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 height: 68,
                 child: ElevatedButton.icon(
                   onPressed: generateAiPlan,
-                  icon: isLoading
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                      : const Icon(Icons.auto_awesome, size: 26),
-                  label: Text(
-                    isLoading ? 'Generating Plan...' : 'Generate AI Plan',
-                    style: const TextStyle(
+                  icon: const Icon(Icons.auto_awesome, size: 26),
+                  label: const Text(
+                    'Generate AI Plan',
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -252,41 +233,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 30),
-
-              if (generatedTasks.isNotEmpty)
-                const Text(
-                  'Generated 8-Week Plan',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF202124),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: generatedTasks.length,
-                itemBuilder: (context, index) {
-                  final task = generatedTasks[index];
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      title: Text(
-                        'Week ${task.week}, Day ${task.day}: ${task.title}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(task.description),
-                      trailing: Text('${task.estimatedHours}h'),
-                    ),
-                  );
-                },
               ),
             ],
           ),
