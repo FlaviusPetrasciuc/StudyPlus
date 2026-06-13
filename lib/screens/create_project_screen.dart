@@ -91,7 +91,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       Navigator.pop(context);
 
       setState(() {
-        errorMessage = 'Failed to generate plan. Make sure your backend is running.';
+        errorMessage = 'Error: $e';
       });
     }
   }
@@ -107,32 +107,17 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text(
-                      'Back',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Builder(
-                    builder: (context) {
-                      return MenuButton(
-                        onPressed: () {
-                          Scaffold.of(context).openEndDrawer();
-                        },
-                      );
-                    },
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: Builder(
+                  builder: (context) {
+                    return MenuButton(
+                      onPressed: () {
+                        Scaffold.of(context).openEndDrawer();
+                      },
+                    );
+                  },
+                ),
               ),
 
               const SizedBox(height: 28),
