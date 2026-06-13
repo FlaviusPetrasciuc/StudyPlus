@@ -7,7 +7,6 @@ import 'screens/create_project_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/verify_email_screen.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,7 +25,7 @@ class StudyPlusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthGate(),
+      home: const CreateProjectScreen(),
     );
   }
 }
