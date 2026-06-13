@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/project_plan.dart';
 import '../services/invitation_service.dart';
 import '../widgets/menu_button.dart';
+import '../widgets/navigation_drawer.dart';
+import 'project_calendar_screen.dart';
 
 class InviteTeamMembersScreen extends StatefulWidget {
-  const InviteTeamMembersScreen({super.key});
+  final ProjectPlan? projectPlan;
+
+  const InviteTeamMembersScreen({
+    super.key,
+    this.projectPlan,
+  });
 
   @override
   State<InviteTeamMembersScreen> createState() =>
@@ -12,36 +20,50 @@ class InviteTeamMembersScreen extends StatefulWidget {
 }
 
 class _InviteTeamMembersScreenState extends State<InviteTeamMembersScreen> {
-  String inviteCode = '';
-  String errorMessage = '';
-  bool isLoading = true;
+  final TextEditingController joinCodeController = TextEditingController();
 
-  final String teamId = 'c805eb9f-2d5b-4e62-8137-29075f9c7f52';
-  final String projectName = 'Product Launch Q2 2026';
+  String joinMessage = '';
+  bool isJoining = false;
+
+  String get inviteCode => widget.projectPlan?.inviteCode ?? '';
+  String get projectName => widget.projectPlan?.title ?? 'Join a Project';
 
   @override
-  void initState() {
-    super.initState();
-    loadInviteCode();
+  void dispose() {
+    joinCodeController.dispose();
+    super.dispose();
   }
 
-  Future<void> loadInviteCode() async {
+  Future<void> joinByCode() async {
+    final code = joinCodeController.text.trim();
+
+    if (code.isEmpty) {
+      setState(() {
+        joinMessage = 'Please enter an invite code';
+      });
+      return;
+    }
+
     setState(() {
-      isLoading = true;
-      errorMessage = '';
+      isJoining = true;
+      joinMessage = '';
     });
 
     try {
-      final code = await InvitationService.generateInviteCode(teamId);
+      final projectPlan = await InvitationService.joinTeamByCode(code);
 
-      setState(() {
-        inviteCode = code;
-        isLoading = false;
-      });
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProjectCalendarScreen(projectPlan: projectPlan),
+        ),
+      );
     } catch (error) {
       setState(() {
-        errorMessage = error.toString();
-        isLoading = false;
+        joinMessage = 'Invalid invite code';
+        isJoining = false;
       });
     }
   }
@@ -60,6 +82,7 @@ class _InviteTeamMembersScreenState extends State<InviteTeamMembersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F8),
+      endDrawer: CustomNavigationDrawer(activePage: 'Team Invite'),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
@@ -71,26 +94,30 @@ class _InviteTeamMembersScreenState extends State<InviteTeamMembersScreen> {
           'Invite Team Members',
           style: TextStyle(color: Colors.black),
         ),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 18),
-            child: MenuButton(),
+            padding: const EdgeInsets.only(right: 18),
+            child: Builder(
+              builder: (context) {
+                return MenuButton(
+                  onPressed: () {
+                    Scaffold.of(context).openEndDrawer();
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
+        child: Column(
           children: [
             projectCard(),
             const SizedBox(height: 24),
-
-            if (errorMessage.isNotEmpty)
-              errorCard()
-            else
-              inviteCodeCard(),
+            if (widget.projectPlan != null) inviteCodeCard(),
+            if (widget.projectPlan != null) const SizedBox(height: 24),
+            joinCodeCard(),
           ],
         ),
       ),
@@ -120,7 +147,7 @@ class _InviteTeamMembersScreenState extends State<InviteTeamMembersScreen> {
           ),
           const SizedBox(height: 14),
           const Text(
-            'Share this invite code with your teammates so they can join this project.',
+            'Share your code with teammates or enter a code to join a project.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
@@ -160,7 +187,7 @@ class _InviteTeamMembersScreenState extends State<InviteTeamMembersScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    inviteCode.isEmpty ? 'No code generated' : inviteCode,
+                    inviteCode,
                     style: const TextStyle(
                       fontSize: 22,
                       letterSpacing: 1.5,
@@ -176,48 +203,88 @@ class _InviteTeamMembersScreenState extends State<InviteTeamMembersScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: loadInviteCode,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D83FF),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Generate New Code'),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget errorCard() {
+  Widget joinCodeCard() {
+    final bool isSuccess = joinMessage.contains('Successfully');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: cardDecoration(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 40),
-          const SizedBox(height: 12),
           const Text(
-            'Could not generate invite code',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'Do you have an invite code?',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            errorMessage,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.grey),
+          const SizedBox(height: 10),
+          const Text(
+            'Enter it here to join a team and see the same AI project tasks.',
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey,
+            ),
           ),
           const SizedBox(height: 18),
-          ElevatedButton(
-            onPressed: loadInviteCode,
-            child: const Text('Try Again'),
+          TextField(
+            controller: joinCodeController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              hintText: 'Enter invite code',
+              filled: true,
+              fillColor: const Color(0xFFFAFAFC),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 16,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Color(0xFF0D83FF),
+                  width: 1.5,
+                ),
+              ),
+            ),
           ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: isJoining ? null : joinByCode,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D83FF),
+                foregroundColor: Colors.white,
+              ),
+              child: Text(isJoining ? 'Joining...' : 'Join Team'),
+            ),
+          ),
+          if (joinMessage.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              joinMessage,
+              style: TextStyle(
+                color: isSuccess ? Colors.green : Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );

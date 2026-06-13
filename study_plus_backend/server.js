@@ -16,6 +16,9 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+const projects = [];
+const inviteCodes = {};
+
 app.get("/", (req, res) => {
   res.send("Backend works with Gemini");
 });
@@ -71,16 +74,34 @@ Requirements:
       contents: prompt,
     });
 
-    let aiText = response.text;
-
-    aiText = aiText
+    let aiText = response.text
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
     const json = JSON.parse(aiText);
 
-    res.json(json);
+    const projectId = Date.now().toString();
+
+    const randomPart = Math.random()
+      .toString(36)
+      .substring(2, 6)
+      .toUpperCase();
+
+    const inviteCode = `PROJ-${new Date().getFullYear()}-${randomPart}`;
+
+    const project = {
+      id: projectId,
+      title,
+      details,
+      inviteCode,
+      tasks: json.tasks,
+    };
+
+    projects.push(project);
+    inviteCodes[inviteCode] = projectId;
+
+    res.json(project);
   } catch (error) {
     console.error("Gemini generation error:", error);
 
@@ -90,22 +111,59 @@ Requirements:
   }
 });
 
+app.get("/projects/:projectId", (req, res) => {
+  const project = projects.find((p) => p.id === req.params.projectId);
+
+  if (!project) {
+    return res.status(404).json({
+      error: "Project not found",
+    });
+  }
+
+  res.json(project);
+});
+
 app.post("/projects/:projectId/invite-code", (req, res) => {
-  const { projectId } = req.params;
+  const project = projects.find((p) => p.id === req.params.projectId);
 
-  const randomPart = Math.random()
-    .toString(36)
-    .substring(2, 6)
-    .toUpperCase();
-
-  const year = new Date().getFullYear();
-
-  const inviteCode = `PROJ-${year}-${randomPart}`;
+  if (!project) {
+    return res.status(404).json({
+      error: "Project not found",
+    });
+  }
 
   res.json({
-    projectId,
-    inviteCode,
+    projectId: project.id,
+    inviteCode: project.inviteCode,
   });
+});
+
+app.post("/teams/join-by-code", (req, res) => {
+  const { joinCode } = req.body;
+
+  if (!joinCode) {
+    return res.status(400).json({
+      error: "Join code is required",
+    });
+  }
+
+  const projectId = inviteCodes[joinCode];
+
+  if (!projectId) {
+    return res.status(400).json({
+      error: "Invalid invite code",
+    });
+  }
+
+  const project = projects.find((p) => p.id === projectId);
+
+  if (!project) {
+    return res.status(404).json({
+      error: "Project not found",
+    });
+  }
+
+  res.json(project);
 });
 
 const PORT = process.env.PORT || 3000;

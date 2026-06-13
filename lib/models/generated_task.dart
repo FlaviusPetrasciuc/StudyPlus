@@ -17,12 +17,12 @@ class GeneratedTask {
 
   factory GeneratedTask.fromJson(Map<String, dynamic> json) {
     return GeneratedTask(
-      week: json['week'],
-      day: json['day'],
-      title: json['title'],
-      description: json['description'],
-      category: json['category'],
-      estimatedHours: json['estimated_hours'],
+      week: json['week'] ?? 1,
+      day: json['day'] ?? 1,
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      category: json['category'] ?? 'planning',
+      estimatedHours: json['estimated_hours'] ?? 1,
     );
   }
 }
