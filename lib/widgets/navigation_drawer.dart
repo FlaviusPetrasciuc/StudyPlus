@@ -106,7 +106,6 @@ class CustomNavigationDrawer extends StatelessWidget {
               },
             ),
 
-            _buildMenuItem(context, 'Documents'),
             _buildMenuItem(context, 'Meetings'),
 
             const SizedBox(height: 30),
