@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 // ── User-defined group ──────────────────────────────────────
-// A group the user creates themselves: a name + a picked colour.
-// Stored as a nullable field on ProductTask — null means no group yet.
 class TaskGroup {
   String name;
   Color color;
@@ -22,15 +20,14 @@ class ChecklistItem {
 class ProductTask {
   final String title;
   final String description;
-  String dueDate;     // e.g. "Apr 5" — updated by the detail page on save
-  String dueTime;     // e.g. "9:00 AM" — set by the detail page on save
-  String status;      // 'To Do' | 'In Progress' | 'Done'
-  String? priority;   // 'High' | 'Medium' | 'Low' — nullable until first save
-  double progress;    // 0.0 – 1.0
+  String dueDate;
+  String dueTime;
+  String status;
+  String? priority;
+  double progress;
   List<ChecklistItem> checklist;
-
-  // Nullable — user assigns a group from inside the detail page
   TaskGroup? group;
+  String estimatedTime; // e.g. "2h", "30m", "1h 30m"
 
   ProductTask({
     required this.title,
@@ -42,9 +39,9 @@ class ProductTask {
     required this.progress,
     required this.checklist,
     this.group,
+    this.estimatedTime = '',
   });
 
-  // Recomputes progress from checklist ticks
   void recalculateProgress() {
     if (checklist.isEmpty) { progress = 0.0; return; }
     final done = checklist.where((i) => i.done).length;
@@ -60,6 +57,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'Apr 5',
     status: 'Done',
     progress: 1.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Define target audience', done: true),
       ChecklistItem(label: 'Competitor analysis',    done: true),
@@ -72,6 +70,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'Apr 12',
     status: 'Done',
     progress: 1.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Sketch low-fi wireframes', done: true),
       ChecklistItem(label: 'Build hi-fi prototype',    done: true),
@@ -83,6 +82,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 1',
     status: 'In Progress',
     progress: 0.5,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Design database schema', done: true),
       ChecklistItem(label: 'Create REST endpoints',  done: true),
@@ -96,6 +96,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'Apr 28',
     status: 'In Progress',
     progress: 0.33,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Content audit',          done: true),
       ChecklistItem(label: 'Editorial calendar',     done: false),
@@ -108,6 +109,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 10',
     status: 'To Do',
     progress: 0.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Write test cases'),
       ChecklistItem(label: 'Run regression tests'),
@@ -120,6 +122,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 15',
     status: 'To Do',
     progress: 0.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'API reference docs'),
       ChecklistItem(label: 'User onboarding guide'),
@@ -131,6 +134,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 20',
     status: 'To Do',
     progress: 0.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Smoke test on production'),
       ChecklistItem(label: 'Set up monitoring alerts'),

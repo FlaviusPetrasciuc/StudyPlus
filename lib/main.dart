@@ -26,7 +26,7 @@ class StudyPlusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthGate(),
+      home: ProductTaskPage(),
     );
   }
 }

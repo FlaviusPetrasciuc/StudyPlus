@@ -136,39 +136,67 @@ class ProductTaskCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Only show group chip if a group has been assigned
-                if (task.group != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: task.group!.color.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6, height: 6,
-                          margin: const EdgeInsets.only(right: 5),
-                          decoration: BoxDecoration(
-                            color: task.group!.color,
-                            shape: BoxShape.circle,
-                          ),
+                // Left side: group chip OR estimated time
+                Row(
+                  children: [
+                    if (task.group != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: task.group!.color.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        Text(
-                          task.group!.name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: task.group!.color,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6, height: 6,
+                              margin: const EdgeInsets.only(right: 5),
+                              decoration: BoxDecoration(
+                                color: task.group!.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Text(
+                              task.group!.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: task.group!.color,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )
-                else
-                // Empty box keeps the due date right-aligned when no group set
-                  const SizedBox(),
+                      ),
+                    if (task.group != null && task.estimatedTime.isNotEmpty)
+                      const SizedBox(width: 8),
+                    // Estimated time chip
+                    if (task.estimatedTime.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_rounded,
+                                size: 11, color: Color(0xFF2563EB)),
+                            const SizedBox(width: 4),
+                            Text(
+                              task.estimatedTime,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
 
                 // Due date turns red with a warning icon when overdue
                 Row(
