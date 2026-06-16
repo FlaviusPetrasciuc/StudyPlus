@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
+import 'create_project_screen.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
   final String email;
@@ -14,8 +14,8 @@ class VerifyEmailScreen extends StatefulWidget {
 
 class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   final List<TextEditingController> _controllers =
-  List.generate(8, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(8, (_) => FocusNode());
+  List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -28,7 +28,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   void _onChanged(String value, int index) {
     setState(() => _errorMessage = null);
-    if (value.length == 1 && index < 7) {
+    if (value.length == 1 && index < 5) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
@@ -37,8 +37,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   Future<void> _handleVerify() async {
     final code = _controllers.map((c) => c.text).join();
-    if (code.length < 8) {
-      setState(() => _errorMessage = 'Please enter the full 8-digit code');
+    if (code.length < 6) {
+      setState(() => _errorMessage = 'Please enter the full 6-digit code');
       return;
     }
 
@@ -57,7 +57,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const CreateProjectScreen()),
         );
       }
     } catch (e) {
@@ -128,11 +128,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                 // 8 code input fields
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(8, (index) {
+                  children: List.generate(6, (index) {
                     return Container(
-                      width: 36.0,
-                      height: 48.0,
-                      margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                      width: 44.0,
+                      height: 52.0,
+                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: TextField(
                         controller: _controllers[index],
                         focusNode: _focusNodes[index],
@@ -142,7 +142,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         onChanged: (value) => _onChanged(value, index),
                         style: const TextStyle(
-                          fontSize: 20.0,
+                          fontSize: 24.0,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF1A1C1E),
                           height: 1.0,
