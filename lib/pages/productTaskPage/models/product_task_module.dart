@@ -16,6 +16,21 @@ class ChecklistItem {
   ChecklistItem({required this.label, this.done = false});
 }
 
+// ── Time log entry ───────────────────────────────────────────
+// Each time user logs hours, one of these is created
+class TimeLog {
+  final double hours;   // eg. 1.5
+  final String notes;   // optional notes for work done
+  final DateTime date;  // date the hours were logged
+
+  TimeLog({
+    required this.hours,
+    required this.notes,
+    required this.date,
+  });
+}
+
+
 // ── Main task model ──────────────────────────────────────────
 class ProductTask {
   final String title;
@@ -29,6 +44,10 @@ class ProductTask {
   TaskGroup? group;
   String estimatedTime; // e.g. "2h", "30m", "1h 30m"
 
+  double estimatedHours; // numeric version used for progress bar
+  double spentHours;     // total hours logged so far
+  List<TimeLog> timeLogs; // full log history
+
   ProductTask({
     required this.title,
     required this.description,
@@ -40,13 +59,30 @@ class ProductTask {
     required this.checklist,
     this.group,
     this.estimatedTime = '',
-  });
+    this.estimatedHours = 0,
+    this.spentHours = 0,
+    List<TimeLog>? timeLogs,
+  }) : timeLogs = timeLogs ?? [];
 
   void recalculateProgress() {
     if (checklist.isEmpty) { progress = 0.0; return; }
     final done = checklist.where((i) => i.done).length;
     progress = done / checklist.length;
   }
+
+  //Adds a new log entry and updates spentHours total
+  void logTime(TimeLog log) {
+    timeLogs.add(log);
+    spentHours += log.hours;
+  }
+
+  //How much estimated time is remaining
+  double get remainingHours =>
+      (estimatedHours - spentHours).clamp(0, estimatedHours);
+
+  //Progress ratio for the time progress bar
+  double get timeProgress =>
+      estimatedHours <= 0 ? 0 : (spentHours / estimatedHours).clamp(0.0, 1.0);
 }
 
 // ── Seed data ────────────────────────────────────────────────
