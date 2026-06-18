@@ -129,6 +129,20 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
     final notesController = TextEditingController();
     DateTime logDate      = DateTime.now();
 
+    // Parses friendly input like "2h", "30m", "15s", "1h 30m" into hours
+    double parseFriendlyTime(String input) {
+      final t = input.trim().toLowerCase();
+      if (t.isEmpty) return 0;
+      double total = 0;
+      final h = RegExp(r'(\d+(\.\d+)?)h').firstMatch(t);
+      if (h != null) total += double.parse(h.group(1)!);
+      final m = RegExp(r'(\d+)m').firstMatch(t);
+      if (m != null) total += int.parse(m.group(1)!) / 60;
+      final s = RegExp(r'(\d+)s').firstMatch(t);
+      if (s != null) total += int.parse(s.group(1)!) / 3600;
+      return total;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -162,18 +176,17 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                 const SizedBox(height: 20),
 
                 // ── Hours field ──
-                const Text('Hours Spent',
+                const Text('Time Spent',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
                         color: Color(0xFF374151))),
                 const SizedBox(height: 4),
-                Text('e.g. 1, 0.5, 2.5',
+                Text('e.g. 2h, 30m, 15s, 1h 30m',
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: hoursController,
-                  keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-                  decoration: _inputDecor('e.g. 1.5'),
+                  keyboardType: TextInputType.text,
+                  decoration: _inputDecor('e.g. 1h 30m'),
                 ),
                 const SizedBox(height: 16),
 
@@ -243,8 +256,8 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      final hours =
-                          double.tryParse(hoursController.text.trim()) ?? 0;
+                      // Parse friendly input e.g. "1h 30m" → 1.5 hours
+                      final hours = parseFriendlyTime(hoursController.text);
                       if (hours <= 0) return; // must log at least some time
 
                       final log = TimeLog(
@@ -826,11 +839,11 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
           // Spent / Estimated / Remaining stats
           Row(
             children: [
-              _timeStat('Spent',     '${spent}h'),
+              _timeStat('Spent',     _formatHours(spent)),
               const SizedBox(width: 24),
-              _timeStat('Estimated', '${estimated}h'),
+              _timeStat('Estimated', _formatHours(estimated)),
               const SizedBox(width: 24),
-              _timeStat('Remaining', '${remaining}h',
+              _timeStat('Remaining', _formatHours(remaining),
                   color: isOver
                       ? const Color(0xFFEF4444)
                       : Colors.black87),
@@ -901,6 +914,22 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
     );
   }
 
+  // Formats a numeric hour value into a friendly string for display
+  // e.g. 2.0 → "2h", 0.5 → "30m", 1.5 → "1h 30m", 0.004 → "15s"
+  String _formatHours(double hours) {
+    if (hours <= 0) return '0m';
+    final totalSeconds = (hours * 3600).round();
+    final h = totalSeconds ~/ 3600;
+    final m = (totalSeconds % 3600) ~/ 60;
+    final s = totalSeconds % 60;
+    final parts = <String>[];
+    if (h > 0) parts.add('${h}h');
+    if (m > 0) parts.add('${m}m');
+    // Only show seconds if there are no hours or minutes
+    if (s > 0 && h == 0 && m == 0) parts.add('${s}s');
+    return parts.join(' ');
+  }
+
   // A single row in the log history list
   Widget _buildLogEntry(TimeLog log) {
     return Padding(
@@ -922,7 +951,7 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${log.hours}h logged',
+                    Text('${_formatHours(log.hours)} logged',
                         style: const TextStyle(fontSize: 13,
                             fontWeight: FontWeight.w600, color: Colors.black87)),
                     Text(_formatLogDate(log.date),
