@@ -223,6 +223,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
   // Form fields
   final _titleController       = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _estimatedTimeController = TextEditingController();
   String  _selectedPriority    = 'Medium';
   DateTime _dueDateTime        = DateTime.now().add(const Duration(days: 7));
 
@@ -299,6 +300,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
       status:      'To Do',
       priority:    _selectedPriority,
       progress:    0.0,
+      estimatedTime: _estimatedTimeController.text.trim(),
       checklist:   [], // empty checklist on creation
     );
 
@@ -311,6 +313,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     // Always dispose controllers to free memory
     _titleController.dispose();
     _descriptionController.dispose();
+    _estimatedTimeController.dispose();
     super.dispose();
   }
 
@@ -431,6 +434,18 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             const SizedBox(height: 16),
 
             // ── Estimated time
+            _fieldLabel('Estimated Time'),
+            const SizedBox(height: 4),
+            Text(
+              'e.g. 30m, 2h, 1h 30m',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+            ),
+            const SizedBox(height: 8),
+            _textField(
+              controller: _estimatedTimeController,
+              hint: 'e.g. 2h',
+            ),
+            const SizedBox(height: 24),
 
             // ── Create button ──
             SizedBox(
