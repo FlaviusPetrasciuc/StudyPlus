@@ -4,6 +4,8 @@ import '../screens/login_screen.dart';
 import '../screens/invite_team_members_screen.dart';
 import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
+import '../screens/project_details.dart';
+import '../pages/productTaskPage/product_task_page.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -219,7 +221,31 @@ class CustomNavigationDrawer extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap ?? () {},
+          onTap: () {
+            if (isActive) {
+              Navigator.pop(context);
+              return;
+            }
+
+            Widget nextPage;
+            if (title == 'Team Analytics') {
+              nextPage = const ProductTaskPage(initialTab: 2);
+            } else if (title == 'Dashboard') {
+              nextPage = const ProductTaskPage(initialTab: 1);
+            } else if (title == 'New Project') {
+              nextPage = const CreateProjectScreen();
+            } else if (title == 'Project Details') {
+              nextPage = const ProjectDetails(initialTabIndex: 0);
+            } else {
+              Navigator.pop(context);
+              return;
+            }
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => nextPage),
+            );
+          },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.symmetric(
