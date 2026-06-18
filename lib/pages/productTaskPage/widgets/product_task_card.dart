@@ -190,24 +190,24 @@ class ProductTaskCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: const Color(0xFFEFF6FF), // blue-50 background
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.access_time_rounded,
-                              size: 12, color: Colors.grey.shade500),
+                          const Icon(Icons.access_time_rounded,
+                              size: 12, color: Color(0xFF2563EB)),
                           const SizedBox(width: 4),
                           Text(
                             // Show remaining if hours logged, else show estimated
                             task.spentHours > 0
                                 ? _formatHours(task.remainingHours)
                                 : _formatHours(task.estimatedHours),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade600,
+                              color: Color(0xFF2563EB), // blue-600
                             ),
                           ),
                         ],
