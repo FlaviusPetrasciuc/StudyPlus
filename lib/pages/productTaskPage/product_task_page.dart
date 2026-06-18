@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
+import '../../widgets/analytics_dashboard.dart';
+import '../../widgets/menu_button.dart';
+import '../../widgets/navigation_drawer.dart';
 import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
 
 class ProductTaskPage extends StatefulWidget {
-  const ProductTaskPage({super.key});
+  final int? initialTab;
+  const ProductTaskPage({super.key, this.initialTab});
 
   @override
   State<ProductTaskPage> createState() => _ProductTaskPageState();
 }
 
 class _ProductTaskPageState extends State<ProductTaskPage> {
-  int _selectedTab = 1; // 0=Overview, 1=Tasks, 2=Analytics
+  late int _selectedTab;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTab = widget.initialTab ?? 1; // 0=Overview, 1=Tasks, 2=Analytics
+  }
 
   void _refresh() => setState(() {});
 
@@ -36,6 +46,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
+      endDrawer: CustomNavigationDrawer(activePage: 'Project Details'),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,12 +90,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
             ],
           ),
-          Container(
-            width: 44, height: 44,
-            decoration: const BoxDecoration(
-                color: Color(0xFF2563EB), shape: BoxShape.circle),
-            child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
-          ),
+          const MenuButton(),
         ],
       ),
     );
@@ -131,11 +137,53 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
 
   Widget _buildTabContent() {
     switch (_selectedTab) {
-      case 0:  return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
-      case 1:  return _buildTasksTab();
-      case 2:  return _buildPlaceholder(Icons.pie_chart_outline_rounded, 'Analytics coming soon');
-      default: return _buildTasksTab();
+      case 0:
+        return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
+      case 1:
+        return _buildTasksTab();
+      case 2:
+        return _buildAnalyticsTab();
+      default:
+        return _buildTasksTab();
     }
+  }
+
+  Widget _buildAnalyticsTab() {
+    final int totalTasks = fakeProductTasks.length;
+    final int completedTasks =
+        fakeProductTasks.where((t) => t.status == 'Done').length;
+    final int inProgressTasks =
+        fakeProductTasks.where((t) => t.status == 'In Progress').length;
+    
+    // Any task that isn't 'Done' or 'In Progress' is counted as 'Pending'
+    final int pendingTasks = totalTasks - completedTasks - inProgressTasks;
+
+    final double completionRate =
+        totalTasks == 0 ? 0 : (completedTasks / totalTasks) * 100;
+
+    // Helper to parse "2h", "30m", "1h 30m" into hours
+    double totalHours = 0;
+    for (var task in fakeProductTasks) {
+      final time = task.estimatedTime.toLowerCase();
+      if (time.contains('h')) {
+        final parts = time.split('h');
+        totalHours += double.tryParse(parts[0]) ?? 0;
+        if (parts.length > 1 && parts[1].contains('m')) {
+          totalHours += (double.tryParse(parts[1].replaceAll('m', '').trim()) ?? 0) / 60;
+        }
+      } else if (time.contains('m')) {
+        totalHours += (double.tryParse(time.replaceAll('m', '').trim()) ?? 0) / 60;
+      }
+    }
+
+    return AnalyticsDashboard(
+      totalTasks: totalTasks,
+      completedTasks: completedTasks,
+      inProgressTasks: inProgressTasks,
+      pendingTasks: pendingTasks,
+      completionRate: completionRate,
+      totalHours: totalHours.toInt(),
+    );
   }
 
   Widget _buildTasksTab() {

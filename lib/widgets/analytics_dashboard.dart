@@ -26,7 +26,6 @@ class AnalyticsDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary Cards
           Row(
             children: [
               Expanded(
@@ -51,7 +50,6 @@ class AnalyticsDashboard extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Task Distribution Card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
@@ -84,7 +82,6 @@ class AnalyticsDashboard extends StatelessWidget {
                 else
                   Row(
                     children: [
-                      // Donut Chart
                       SizedBox(
                         width: 140,
                         height: 140,
@@ -124,7 +121,6 @@ class AnalyticsDashboard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 40),
-                      // Legend
                       Expanded(
                         child: Column(
                           children: [
@@ -292,23 +288,30 @@ class DonutChartPainter extends CustomPainter {
 
     double startAngle = -math.pi / 2;
 
+    // Use a small constant for gaps between segments
+    const double gap = 0.04;
+
+    // 1. Completed
     if (completed > 0) {
       paint.color = const Color(0xFF4CAF50);
       double sweep = (completed / total) * 2 * math.pi;
-      canvas.drawArc(rect, startAngle, sweep - 0.05, false, paint);
+      canvas.drawArc(rect, startAngle, sweep - (inProgress > 0 || pending > 0 ? gap : 0), false, paint);
       startAngle += sweep;
     }
 
+    // 2. In Progress
     if (inProgress > 0) {
       paint.color = const Color(0xFFFF9800);
       double sweep = (inProgress / total) * 2 * math.pi;
-      canvas.drawArc(rect, startAngle, sweep - 0.05, false, paint);
+      canvas.drawArc(rect, startAngle, sweep - (pending > 0 ? gap : 0), false, paint);
       startAngle += sweep;
     }
 
+    // 3. Pending
     if (pending > 0) {
       paint.color = const Color(0xFF909497);
-      double sweep = (pending / total) * 2 * math.pi;
+      // The last segment fills the remaining space to avoid any gaps due to rounding/math
+      double sweep = 2 * math.pi - (startAngle - (-math.pi / 2));
       canvas.drawArc(rect, startAngle, sweep, false, paint);
     }
   }
