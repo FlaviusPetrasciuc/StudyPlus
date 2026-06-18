@@ -4,6 +4,7 @@ import '../screens/login_screen.dart';
 import '../screens/invite_team_members_screen.dart';
 import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
+import '../screens/project_overview_screen.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -80,7 +81,38 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             _buildSectionTitle('MAIN'),
 
-            _buildMenuItem(context, 'Dashboard'),
+            _buildMenuItem(
+              context,
+              'Dashboard',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'Dashboard',
+                  ProjectOverviewScreen(
+                    project: ProjectData(
+                      name: 'Product Launch Q2 2026',
+                      teamCount: 6,
+                      progress: 54,
+                      completedTasks: 2,
+                      totalTasks: 7,
+                      timeSpent: 84,
+                      inProgress: 2,
+                      timelineStart: 'Mar 1',
+                      timelineEnd: 'May 20',
+                      timelinePercent: 0.42,
+                      members: [
+                        TeamMember(name: 'Sarah Chen', role: 'Admin', statusColor: Color(0xFF2979FF), avatarText: 'SC'),
+                        TeamMember(name: 'Michael Rodriguez', role: 'Contributor', statusColor: Color(0xFF00C48C), avatarText: 'MR'),
+                        TeamMember(name: 'Emily Johnson', role: 'Contributor', statusColor: Color(0xFFFF9F43), avatarText: 'EJ'),
+                        TeamMember(name: 'David Kim', role: 'Contributor', statusColor: Color(0xFF9B59B6), avatarText: 'DK'),
+                        TeamMember(name: 'Priya Patel', role: 'Contributor', statusColor: Colors.red, avatarText: 'PP'),
+                        TeamMember(name: 'James Wilson', role: 'Viewer', statusColor: Color(0xFF00C48C), avatarText: 'JW'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
 
             _buildMenuItem(
               context,
