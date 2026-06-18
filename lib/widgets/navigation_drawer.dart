@@ -1,12 +1,30 @@
 import 'package:flutter/material.dart';
 import '../auth/auth_service.dart';
 import '../screens/login_screen.dart';
+import '../screens/invite_team_members_screen.dart';
+import '../screens/create_project_screen.dart';
+import '../screens/project_calendar_screen.dart';
+import '../screens/project_details.dart';
+import '../pages/productTaskPage/product_task_page.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
   final AuthService _authService = AuthService();
 
   CustomNavigationDrawer({super.key, this.activePage});
+
+  void _navigateTo(BuildContext context, String pageName, Widget screen) {
+    Navigator.pop(context);
+
+    if (activePage != pageName) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => screen,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +38,10 @@ class CustomNavigationDrawer extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         'Menu',
                         style: TextStyle(
@@ -50,29 +68,73 @@ class CustomNavigationDrawer extends StatelessWidget {
                       color: Color(0xFF007AFF),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 30),
+
             _buildSectionTitle('MAIN'),
-            _buildMenuItem('Dashboard'),
-            _buildMenuItem('New Project'),
-            _buildMenuItem('Calendar'),
-            _buildMenuItem('Documents'),
-            _buildMenuItem('Meetings'),
+
+            _buildMenuItem(context, 'Dashboard'),
+
+            _buildMenuItem(
+              context,
+              'New Project',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'New Project',
+                  const CreateProjectScreen(),
+                );
+              },
+            ),
+
+            _buildMenuItem(
+              context,
+              'Calendar',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'Calendar',
+                  const ProjectCalendarScreen(),
+                );
+              },
+            ),
+
+            _buildMenuItem(context, 'Meetings'),
+
             const SizedBox(height: 30),
+
             _buildSectionTitle('TEAM'),
-            _buildMenuItem('Team Dashboard'),
-            _buildMenuItem('Team Analytics'),
-            _buildMenuItem('Activity Feed'),
-            _buildMenuItem('Task Assignment'),
-            _buildMenuItem('Team Invite'),
+
+            _buildMenuItem(context, 'Team Dashboard'),
+            _buildMenuItem(context, 'Team Analytics'),
+            _buildMenuItem(context, 'Activity Feed'),
+            _buildMenuItem(context, 'Task Assignment'),
+
+            _buildMenuItem(
+              context,
+              'Team Invite',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'Team Invite',
+                  const InviteTeamMembersScreen(),
+                );
+              },
+            ),
+
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 20),
-            // Log Out Button
+
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -85,20 +147,24 @@ class CustomNavigationDrawer extends StatelessWidget {
                 child: InkWell(
                   onTap: () async {
                     await _authService.signOut();
+
                     if (context.mounted) {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
                           builder: (context) => const LoginScreen(),
                         ),
-                        (route) => false,
+                            (route) => false,
                       );
                     }
                   },
                   borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 16.0,
+                    ),
                     child: Row(
-                      children: const [
+                      children: [
                         Icon(Icons.logout, color: Colors.red),
                         SizedBox(width: 12),
                         Text(
@@ -115,6 +181,7 @@ class CustomNavigationDrawer extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
           ],
         ),
@@ -137,7 +204,11 @@ class CustomNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(String title) {
+  Widget _buildMenuItem(
+      BuildContext context,
+      String title, {
+        VoidCallback? onTap,
+      }) {
     final bool isActive = activePage == title;
 
     return Container(
@@ -151,11 +222,36 @@ class CustomNavigationDrawer extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Placeholder for navigation. To be added
+            if (isActive) {
+              Navigator.pop(context);
+              return;
+            }
+
+            Widget nextPage;
+            if (title == 'Team Analytics') {
+              nextPage = const ProductTaskPage(initialTab: 2);
+            } else if (title == 'Dashboard') {
+              nextPage = const ProductTaskPage(initialTab: 1);
+            } else if (title == 'New Project') {
+              nextPage = const CreateProjectScreen();
+            } else if (title == 'Project Details') {
+              nextPage = const ProjectDetails(initialTabIndex: 0);
+            } else {
+              Navigator.pop(context);
+              return;
+            }
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => nextPage),
+            );
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
+            ),
             child: Text(
               title,
               style: TextStyle(
