@@ -18,6 +18,8 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
   late String _draftPriority;
   late TaskGroup? _draftGroup;
   late DateTime _draftDueDateTime; // replaces the plain string due date
+  late String _draftEstimatedTime;
+  late TextEditingController _estimatedTimeController;
 
   static const List<String> _statusOptions   = ['Pending', 'In Progress', 'Done'];
   static const List<String> _priorityOptions = ['High', 'Medium', 'Low'];
@@ -42,6 +44,15 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
     _draftGroup    = widget.task.group;
     // Parse existing dueDate string into a DateTime, or fall back to now
     _draftDueDateTime = _parseDueDate(widget.task.dueDate);
+
+    _draftEstimatedTime = widget.task.estimatedTime;
+    _estimatedTimeController = TextEditingController(text: widget.task.estimatedTime);
+  }
+
+  @override
+  void dispose() {
+    _estimatedTimeController.dispose();
+    super.dispose();
   }
 
   // Tries to parse the stored "Apr 5" style string back to a DateTime.
@@ -275,6 +286,7 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
     widget.task.group    = _draftGroup;
     widget.task.dueDate  = _formatDate(_draftDueDateTime);
     widget.task.dueTime  = _formatTime(_draftDueDateTime);
+    widget.task.estimatedTime = _estimatedTimeController.text.trim();
     Navigator.pop(context); // return to main page
   }
 
@@ -350,6 +362,8 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                   _buildPriorityCard(),
                   const SizedBox(height: 16),
                   _buildGroupCard(),
+                  const SizedBox(height: 24),
+                  _buildEstimatedTimeCard(),
                   const SizedBox(height: 24),
                   _buildSaveButton(),
                   const SizedBox(height: 16),
@@ -595,6 +609,47 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEstimatedTimeCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecor(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Estimated Time',
+              style: TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black87)),
+          const SizedBox(height: 4),
+          Text('e.g. 30m, 2h, 1h 30m',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _estimatedTimeController,
+            decoration: InputDecoration(
+              hintText: 'e.g. 2h',
+              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+              filled: true,
+              fillColor: const Color(0xFFF9FAFB),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF2563EB)),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
         ],
       ),
     );
