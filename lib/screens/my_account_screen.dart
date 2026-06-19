@@ -108,13 +108,13 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                     Text(
                       email,
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1C1E),
                       ),
                     ),
                     const Text(
-                      'Free Plan Member',
+                      'Project Member',
                       style: TextStyle(
                         fontSize: 14,
                         color: Color(0xFF6C7278),
@@ -178,6 +178,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              // for now the projects are hardcoded, but will be dynamic
               _buildProjectItem('Product Launch Q2 2026', 'Lead Designer'),
               _buildProjectItem('StudyPlus Backend', 'Contributor'),
 
