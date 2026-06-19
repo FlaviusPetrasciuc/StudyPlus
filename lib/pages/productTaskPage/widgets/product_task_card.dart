@@ -60,6 +60,23 @@ class ProductTaskCard extends StatelessWidget {
     }
   }
 
+  // Formats a numeric hour value into a friendly string
+  // e.g. 2.0 → "2h", 0.5 → "30m", 1.5 → "1h 30m", 0.004 → "15s"
+  String _formatHours(double hours) {
+    if (hours <= 0) return '0m';
+    final totalSeconds = (hours * 3600).round();
+    final h   = totalSeconds ~/ 3600;
+    final m   = (totalSeconds % 3600) ~/ 60;
+    final s   = totalSeconds % 60;
+
+    final parts = <String>[];
+    if (h > 0) parts.add('${h}h');
+    if (m > 0) parts.add('${m}m');
+    // Only show seconds if there are no hours or minutes
+    if (s > 0 && h == 0 && m == 0) parts.add('${s}s');
+    return parts.join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final overdue = _isOverdue(task);
@@ -131,12 +148,12 @@ class ProductTaskCard extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // ── Group chip + due date ──
-            // Group is now user-defined (name + colour), pulled from task.group
+            // ── Group chip + time chip + due date ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Only show group chip if a group has been assigned
+
+                // Left side: group chip (if set) or empty space
                 if (task.group != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -167,10 +184,39 @@ class ProductTaskCard extends StatelessWidget {
                     ),
                   )
                 else
-                // Empty box keeps the due date right-aligned when no group set
-                  const SizedBox(),
+                // Time chip — shows remaining hours if any hours have been logged,
+                // otherwise shows the original estimated time
+                  if (task.estimatedHours > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF), // blue-50 background
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_rounded,
+                              size: 12, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 4),
+                          Text(
+                            // Show remaining if hours logged, else show estimated
+                            task.spentHours > 0
+                                ? _formatHours(task.remainingHours)
+                                : _formatHours(task.estimatedHours),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2563EB), // blue-600
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox(),
 
-                // Due date turns red with a warning icon when overdue
+                // Right side: due date (red + icon if overdue)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -186,8 +232,8 @@ class ProductTaskCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: overdue ? FontWeight.w600 : FontWeight.w400,
                         color: overdue
-                            ? const Color(0xFFEF4444) // red if overdue
-                            : Colors.grey.shade500,   // grey if fine
+                            ? const Color(0xFFEF4444)
+                            : Colors.grey.shade500,
                       ),
                     ),
                   ],

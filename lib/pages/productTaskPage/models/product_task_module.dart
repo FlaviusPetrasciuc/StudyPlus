@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 // ── User-defined group ──────────────────────────────────────
-// A group the user creates themselves: a name + a picked colour.
-// Stored as a nullable field on ProductTask — null means no group yet.
 class TaskGroup {
   String name;
   Color color;
@@ -18,19 +16,35 @@ class ChecklistItem {
   ChecklistItem({required this.label, this.done = false});
 }
 
+// ── Time log entry ───────────────────────────────────────────
+// Each time the user logs hours, one of these is created
+class TimeLog {
+  double hours;   // mutable so the user can edit a log entry
+  String notes;   // mutable so the user can edit a log entry
+  DateTime date;
+
+  TimeLog({
+    required this.hours,
+    required this.notes,
+    required this.date,
+  });
+}
+
 // ── Main task model ──────────────────────────────────────────
 class ProductTask {
   final String title;
   final String description;
-  String dueDate;     // e.g. "Apr 5" — updated by the detail page on save
-  String dueTime;     // e.g. "9:00 AM" — set by the detail page on save
-  String status;      // 'To Do' | 'In Progress' | 'Done'
-  String? priority;   // 'High' | 'Medium' | 'Low' — nullable until first save
-  double progress;    // 0.0 – 1.0
+  String dueDate;
+  String dueTime;
+  String status;
+  String? priority;
+  double progress;
   List<ChecklistItem> checklist;
-
-  // Nullable — user assigns a group from inside the detail page
   TaskGroup? group;
+  String estimatedTime;   // editable — e.g. "2h"
+  double estimatedHours;  // numeric version used for progress bar calculation
+  double spentHours;      // total hours logged so far
+  List<TimeLog> timeLogs; // full log history
 
   ProductTask({
     required this.title,
@@ -42,14 +56,31 @@ class ProductTask {
     required this.progress,
     required this.checklist,
     this.group,
-  });
+    this.estimatedTime = '',
+    this.estimatedHours = 0,
+    this.spentHours = 0,
+    List<TimeLog>? timeLogs,
+  }) : timeLogs = timeLogs ?? [];
 
-  // Recomputes progress from checklist ticks
   void recalculateProgress() {
     if (checklist.isEmpty) { progress = 0.0; return; }
     final done = checklist.where((i) => i.done).length;
     progress = done / checklist.length;
   }
+
+  // Adds a new log entry and updates spentHours total
+  void logTime(TimeLog log) {
+    timeLogs.add(log);
+    spentHours += log.hours;
+  }
+
+  // How much estimated time is remaining (never goes below 0)
+  double get remainingHours =>
+      (estimatedHours - spentHours).clamp(0, estimatedHours);
+
+  // Progress ratio for the time progress bar (0.0 – 1.0)
+  double get timeProgress =>
+      estimatedHours <= 0 ? 0 : (spentHours / estimatedHours).clamp(0.0, 1.0);
 }
 
 // ── Seed data ────────────────────────────────────────────────
@@ -60,6 +91,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'Apr 5',
     status: 'Done',
     progress: 1.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Define target audience', done: true),
       ChecklistItem(label: 'Competitor analysis',    done: true),
@@ -72,6 +104,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'Apr 12',
     status: 'Done',
     progress: 1.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Sketch low-fi wireframes', done: true),
       ChecklistItem(label: 'Build hi-fi prototype',    done: true),
@@ -83,6 +116,9 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 1',
     status: 'In Progress',
     progress: 0.5,
+    estimatedTime: '8h',
+    estimatedHours: 8,
+    spentHours: 4,
     checklist: [
       ChecklistItem(label: 'Design database schema', done: true),
       ChecklistItem(label: 'Create REST endpoints',  done: true),
@@ -96,6 +132,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'Apr 28',
     status: 'In Progress',
     progress: 0.33,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Content audit',          done: true),
       ChecklistItem(label: 'Editorial calendar',     done: false),
@@ -108,6 +145,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 10',
     status: 'To Do',
     progress: 0.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Write test cases'),
       ChecklistItem(label: 'Run regression tests'),
@@ -120,6 +158,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 15',
     status: 'To Do',
     progress: 0.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'API reference docs'),
       ChecklistItem(label: 'User onboarding guide'),
@@ -131,6 +170,7 @@ final List<ProductTask> fakeProductTasks = [
     dueDate: 'May 20',
     status: 'To Do',
     progress: 0.0,
+    estimatedTime: '',
     checklist: [
       ChecklistItem(label: 'Smoke test on production'),
       ChecklistItem(label: 'Set up monitoring alerts'),

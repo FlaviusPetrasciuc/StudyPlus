@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
+import '../../widgets/analytics_dashboard.dart';
+import '../../widgets/menu_button.dart';
+import '../../widgets/navigation_drawer.dart';
 import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
 
 class ProductTaskPage extends StatefulWidget {
-  const ProductTaskPage({super.key});
+  final int? initialTab;
+  const ProductTaskPage({super.key, this.initialTab});
 
   @override
   State<ProductTaskPage> createState() => _ProductTaskPageState();
 }
 
 class _ProductTaskPageState extends State<ProductTaskPage> {
-  int _selectedTab = 1; // 0=Overview, 1=Tasks, 2=Analytics
+  late int _selectedTab;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTab = widget.initialTab ?? 1; // 0=Overview, 1=Tasks, 2=Analytics
+  }
 
   void _refresh() => setState(() {});
 
@@ -36,6 +46,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
+      endDrawer: CustomNavigationDrawer(activePage: 'Project Details'),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +58,9 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
                   _buildTabBar(),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
                 ],
               ),
             ),
@@ -79,12 +92,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
             ],
           ),
-          Container(
-            width: 44, height: 44,
-            decoration: const BoxDecoration(
-                color: Color(0xFF2563EB), shape: BoxShape.circle),
-            child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
-          ),
+          const MenuButton(),
         ],
       ),
     );
@@ -131,11 +139,53 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
 
   Widget _buildTabContent() {
     switch (_selectedTab) {
-      case 0:  return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
-      case 1:  return _buildTasksTab();
-      case 2:  return _buildPlaceholder(Icons.pie_chart_outline_rounded, 'Analytics coming soon');
-      default: return _buildTasksTab();
+      case 0:
+        return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
+      case 1:
+        return _buildTasksTab();
+      case 2:
+        return _buildAnalyticsTab();
+      default:
+        return _buildTasksTab();
     }
+  }
+
+  Widget _buildAnalyticsTab() {
+    final int totalTasks = fakeProductTasks.length;
+    final int completedTasks =
+        fakeProductTasks.where((t) => t.status == 'Done').length;
+    final int inProgressTasks =
+        fakeProductTasks.where((t) => t.status == 'In Progress').length;
+    
+    // Any task that isn't 'Done' or 'In Progress' is counted as 'Pending'
+    final int pendingTasks = totalTasks - completedTasks - inProgressTasks;
+
+    final double completionRate =
+        totalTasks == 0 ? 0 : (completedTasks / totalTasks) * 100;
+
+    // Helper to parse "2h", "30m", "1h 30m" into hours
+    double totalHours = 0;
+    for (var task in fakeProductTasks) {
+      final time = task.estimatedTime.toLowerCase();
+      if (time.contains('h')) {
+        final parts = time.split('h');
+        totalHours += double.tryParse(parts[0]) ?? 0;
+        if (parts.length > 1 && parts[1].contains('m')) {
+          totalHours += (double.tryParse(parts[1].replaceAll('m', '').trim()) ?? 0) / 60;
+        }
+      } else if (time.contains('m')) {
+        totalHours += (double.tryParse(time.replaceAll('m', '').trim()) ?? 0) / 60;
+      }
+    }
+
+    return AnalyticsDashboard(
+      totalTasks: totalTasks,
+      completedTasks: completedTasks,
+      inProgressTasks: inProgressTasks,
+      pendingTasks: pendingTasks,
+      completionRate: completionRate,
+      totalHours: totalHours.toInt(),
+    );
   }
 
   Widget _buildTasksTab() {
@@ -221,10 +271,11 @@ class _CreateTaskSheet extends StatefulWidget {
 class _CreateTaskSheetState extends State<_CreateTaskSheet> {
 
   // Form fields
-  final _titleController       = TextEditingController();
-  final _descriptionController = TextEditingController();
-  String  _selectedPriority    = 'Medium';
-  DateTime _dueDateTime        = DateTime.now().add(const Duration(days: 7));
+  final _titleController         = TextEditingController();
+  final _descriptionController   = TextEditingController();
+  final _estimatedTimeController = TextEditingController();
+  String   _selectedPriority     = 'Medium';
+  DateTime _dueDateTime          = DateTime.now().add(const Duration(days: 7));
 
   static const List<String> _priorityOptions = ['High', 'Medium', 'Low'];
 
@@ -287,19 +338,38 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     });
   }
 
+  // Parses "2h", "30m", "1h 30m" into a numeric hour value for the progress bar
+  double _parseEstimatedHours(String input) {
+    final trimmed = input.trim().toLowerCase();
+    if (trimmed.isEmpty) return 0;
+    double total = 0;
+    // Match hours — e.g. "2h" or "1h"
+    final hoursMatch = RegExp(r'(\d+(\.\d+)?)h').firstMatch(trimmed);
+    if (hoursMatch != null) total += double.parse(hoursMatch.group(1)!);
+    // Match minutes — e.g. "30m"
+    final minsMatch = RegExp(r'(\d+)m').firstMatch(trimmed);
+    if (minsMatch != null) total += int.parse(minsMatch.group(1)!) / 60;
+    return total;
+  }
+
   // Validates and creates the task
   void _submit() {
     if (_titleController.text.trim().isEmpty) return; // title is required
 
+    final estText  = _estimatedTimeController.text.trim();
+    final estHours = _parseEstimatedHours(estText);
+
     final newTask = ProductTask(
-      title:       _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      dueDate:     _formatDate(_dueDateTime),
-      dueTime:     _formatTime(_dueDateTime),
-      status:      'To Do',
-      priority:    _selectedPriority,
-      progress:    0.0,
-      checklist:   [], // empty checklist on creation
+      title:          _titleController.text.trim(),
+      description:    _descriptionController.text.trim(),
+      dueDate:        _formatDate(_dueDateTime),
+      dueTime:        _formatTime(_dueDateTime),
+      status:         'To Do',
+      priority:       _selectedPriority,
+      progress:       0.0,
+      estimatedTime:  estText,    // human-readable string shown as chip
+      estimatedHours: estHours,   // numeric value used for the progress bar
+      checklist:      [],
     );
 
     widget.onCreated(newTask); // pass back to the page
@@ -311,6 +381,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     // Always dispose controllers to free memory
     _titleController.dispose();
     _descriptionController.dispose();
+    _estimatedTimeController.dispose();
     super.dispose();
   }
 
@@ -430,7 +501,17 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Estimated time
+            // ── Estimated time ──
+            _fieldLabel('Estimated Time'),
+            const SizedBox(height: 4),
+            Text('e.g. 30m, 2h, 1h 30m',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+            const SizedBox(height: 8),
+            _textField(
+              controller: _estimatedTimeController,
+              hint: 'e.g. 2h',
+            ),
+            const SizedBox(height: 28),
 
             // ── Create button ──
             SizedBox(
