@@ -60,6 +60,23 @@ class ProductTaskCard extends StatelessWidget {
     }
   }
 
+  // Formats a numeric hour value into a friendly string
+  // e.g. 2.0 → "2h", 0.5 → "30m", 1.5 → "1h 30m", 0.004 → "15s"
+  String _formatHours(double hours) {
+    if (hours <= 0) return '0m';
+    final totalSeconds = (hours * 3600).round();
+    final h   = totalSeconds ~/ 3600;
+    final m   = (totalSeconds % 3600) ~/ 60;
+    final s   = totalSeconds % 60;
+
+    final parts = <String>[];
+    if (h > 0) parts.add('${h}h');
+    if (m > 0) parts.add('${m}m');
+    // Only show seconds if there are no hours or minutes
+    if (s > 0 && h == 0 && m == 0) parts.add('${s}s');
+    return parts.join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final overdue = _isOverdue(task);
@@ -131,74 +148,75 @@ class ProductTaskCard extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // ── Group chip + due date ──
-            // Group is now user-defined (name + colour), pulled from task.group
+            // ── Group chip + time chip + due date ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Left side: group chip OR estimated time
-                Row(
-                  children: [
-                    if (task.group != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: task.group!.color.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6, height: 6,
-                              margin: const EdgeInsets.only(right: 5),
-                              decoration: BoxDecoration(
-                                color: task.group!.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            Text(
-                              task.group!.name,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: task.group!.color,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (task.group != null && task.estimatedTime.isNotEmpty)
-                      const SizedBox(width: 8),
-                    // Estimated time chip
-                    if (task.estimatedTime.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.access_time_rounded,
-                                size: 11, color: Color(0xFF2563EB)),
-                            const SizedBox(width: 4),
-                            Text(
-                              task.estimatedTime,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF2563EB),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
 
-                // Due date turns red with a warning icon when overdue
+                // Left side: group chip (if set) or empty space
+                if (task.group != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: task.group!.color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6, height: 6,
+                          margin: const EdgeInsets.only(right: 5),
+                          decoration: BoxDecoration(
+                            color: task.group!.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Text(
+                          task.group!.name,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: task.group!.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                // Time chip — shows remaining hours if any hours have been logged,
+                // otherwise shows the original estimated time
+                  if (task.estimatedHours > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF), // blue-50 background
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time_rounded,
+                              size: 12, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 4),
+                          Text(
+                            // Show remaining if hours logged, else show estimated
+                            task.spentHours > 0
+                                ? _formatHours(task.remainingHours)
+                                : _formatHours(task.estimatedHours),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2563EB), // blue-600
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox(),
+
+                // Right side: due date (red + icon if overdue)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -214,8 +232,8 @@ class ProductTaskCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: overdue ? FontWeight.w600 : FontWeight.w400,
                         color: overdue
-                            ? const Color(0xFFEF4444) // red if overdue
-                            : Colors.grey.shade500,   // grey if fine
+                            ? const Color(0xFFEF4444)
+                            : Colors.grey.shade500,
                       ),
                     ),
                   ],

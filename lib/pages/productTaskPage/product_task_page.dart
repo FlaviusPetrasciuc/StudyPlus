@@ -58,7 +58,9 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
                   _buildTabBar(),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
                 ],
               ),
             ),
@@ -269,11 +271,11 @@ class _CreateTaskSheet extends StatefulWidget {
 class _CreateTaskSheetState extends State<_CreateTaskSheet> {
 
   // Form fields
-  final _titleController       = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _titleController         = TextEditingController();
+  final _descriptionController   = TextEditingController();
   final _estimatedTimeController = TextEditingController();
-  String  _selectedPriority    = 'Medium';
-  DateTime _dueDateTime        = DateTime.now().add(const Duration(days: 7));
+  String   _selectedPriority     = 'Medium';
+  DateTime _dueDateTime          = DateTime.now().add(const Duration(days: 7));
 
   static const List<String> _priorityOptions = ['High', 'Medium', 'Low'];
 
@@ -336,20 +338,38 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     });
   }
 
+  // Parses "2h", "30m", "1h 30m" into a numeric hour value for the progress bar
+  double _parseEstimatedHours(String input) {
+    final trimmed = input.trim().toLowerCase();
+    if (trimmed.isEmpty) return 0;
+    double total = 0;
+    // Match hours — e.g. "2h" or "1h"
+    final hoursMatch = RegExp(r'(\d+(\.\d+)?)h').firstMatch(trimmed);
+    if (hoursMatch != null) total += double.parse(hoursMatch.group(1)!);
+    // Match minutes — e.g. "30m"
+    final minsMatch = RegExp(r'(\d+)m').firstMatch(trimmed);
+    if (minsMatch != null) total += int.parse(minsMatch.group(1)!) / 60;
+    return total;
+  }
+
   // Validates and creates the task
   void _submit() {
     if (_titleController.text.trim().isEmpty) return; // title is required
 
+    final estText  = _estimatedTimeController.text.trim();
+    final estHours = _parseEstimatedHours(estText);
+
     final newTask = ProductTask(
-      title:       _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      dueDate:     _formatDate(_dueDateTime),
-      dueTime:     _formatTime(_dueDateTime),
-      status:      'To Do',
-      priority:    _selectedPriority,
-      progress:    0.0,
-      estimatedTime: _estimatedTimeController.text.trim(),
-      checklist:   [], // empty checklist on creation
+      title:          _titleController.text.trim(),
+      description:    _descriptionController.text.trim(),
+      dueDate:        _formatDate(_dueDateTime),
+      dueTime:        _formatTime(_dueDateTime),
+      status:         'To Do',
+      priority:       _selectedPriority,
+      progress:       0.0,
+      estimatedTime:  estText,    // human-readable string shown as chip
+      estimatedHours: estHours,   // numeric value used for the progress bar
+      checklist:      [],
     );
 
     widget.onCreated(newTask); // pass back to the page
@@ -481,19 +501,17 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Estimated time
+            // ── Estimated time ──
             _fieldLabel('Estimated Time'),
             const SizedBox(height: 4),
-            Text(
-              'e.g. 30m, 2h, 1h 30m',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
-            ),
+            Text('e.g. 30m, 2h, 1h 30m',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
             const SizedBox(height: 8),
             _textField(
               controller: _estimatedTimeController,
               hint: 'e.g. 2h',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
             // ── Create button ──
             SizedBox(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:study_plus/auth/auth_gate.dart';
-import 'package:study_plus/pages/productTaskPage/product_task_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -21,7 +20,7 @@ class StudyPlusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ProductTaskPage(),
+      home: AuthGate(),
     );
   }
 }
