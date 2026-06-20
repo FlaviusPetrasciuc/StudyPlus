@@ -3,6 +3,8 @@ import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
 import '../createProjectPage/models/project.dart';
 import '../../widgets/analytics_dashboard.dart';
+import '../../widgets/menu_button.dart';
+import '../../widgets/navigation_drawer.dart';
 
 class ProductTaskPage extends StatefulWidget {
   // The project whose tasks this page displays. Title, member count,
@@ -59,6 +61,8 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
+      // Shared app-wide drawer — MenuButton opens this by default
+      endDrawer: CustomNavigationDrawer(activePage: widget.project.title),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,11 +116,12 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
               ],
             ),
           ),
-          Container(
-            width: 40, height: 40,
-            decoration: const BoxDecoration(
-                color: Color(0xFF2563EB), shape: BoxShape.circle),
-            child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+          // Builder gives MenuButton a context that's guaranteed to sit
+          // below the Scaffold, so Scaffold.of(context) can find it
+          Builder(
+            builder: (context) => MenuButton(
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
           ),
           const SizedBox(height: 8), // bottom breathing room before divider
         ],
