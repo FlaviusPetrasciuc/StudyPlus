@@ -97,23 +97,61 @@ class Project {
   // ── Sample project for quick navigation ───────────────────────────────
   // Used by entry points (like the navigation drawer) that need to open
   // ProductTaskPage without a specific real project selected — e.g. a
-  // "Team Analytics" or "Dashboard" menu link. Returns one consistent
-  // demo project rather than each caller inventing its own placeholder.
+  // "Team Analytics" or "Dashboard" menu link. Has a mix of statuses,
+  // groups, and logged hours so Overview/Analytics have real data to show.
   static Project sample() {
-    final group = TaskGroup(name: 'General', color: const Color(0xFF6366F1));
+    final design = TaskGroup(name: 'Design', color: const Color(0xFF6366F1));
+    final dev    = TaskGroup(name: 'Development', color: const Color(0xFF0EA5E9));
+    final qa     = TaskGroup(name: 'QA', color: const Color(0xFF10B981));
+
     return Project(
       title: 'Sample Project',
       deadline: DateTime.now().add(const Duration(days: 14)),
-      groups: [group],
+      groups: [design, dev, qa],
       tasks: [
         ProductTask(
-          title: 'Example Task',
-          description: 'This is a placeholder task for navigation preview',
+          title: 'Wireframes',
+          description: 'Low-fi wireframes for core screens',
+          dueDate: 'Jun 20',
+          status: 'Done',
+          priority: 'Medium',
+          progress: 1.0,
+          group: design,
+          estimatedHours: 4,
+          spentHours: 4,
+          checklist: [],
+        ),
+        ProductTask(
+          title: 'API integration',
+          description: 'Connect frontend to backend endpoints',
+          dueDate: 'Jun 25',
+          status: 'In Progress',
+          priority: 'High',
+          progress: 0.0,
+          group: dev,
+          estimatedHours: 6,
+          spentHours: 3,
+          checklist: [],
+        ),
+        ProductTask(
+          title: 'Regression testing',
+          description: 'Full test pass before release',
           dueDate: 'Jun 30',
           status: 'To Do',
           priority: 'Medium',
           progress: 0.0,
-          group: group,
+          group: qa,
+          estimatedHours: 5,
+          checklist: [],
+        ),
+        ProductTask(
+          title: 'Bug triage',
+          description: 'Review and prioritise open issues',
+          dueDate: 'Jul 2',
+          status: 'To Do',
+          priority: 'Low',
+          progress: 0.0,
+          group: qa,
           checklist: [],
         ),
       ],
