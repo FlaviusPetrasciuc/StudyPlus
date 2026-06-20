@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/generated_task.dart';
 import '../models/project_plan.dart';
+import '../utils/supabase_debug.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
 import 'create_project_screen.dart';
@@ -113,7 +114,9 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
         );
         isLoading = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      logSupabaseError('load latest project calendar', e, stackTrace);
+
       setState(() {
         errorMessage = 'Failed to load calendar: $e';
         isLoading = false;

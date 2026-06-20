@@ -22,7 +22,7 @@ android/.gradle/
 *.iml
 
 # Environment
-.env
+study_plus_backend/.env
 
 # Node
 node_modules/

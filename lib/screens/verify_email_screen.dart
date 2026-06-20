@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/supabase_debug.dart';
 import 'create_project_screen.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
@@ -60,7 +61,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           MaterialPageRoute(builder: (context) => const CreateProjectScreen()),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      logSupabaseError('verify signup otp', e, stackTrace);
+
       setState(() => _errorMessage = 'Invalid or expired code. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -78,7 +81,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           const SnackBar(content: Text('Verification code resent!')),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      logSupabaseError('resend signup otp', e, stackTrace);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

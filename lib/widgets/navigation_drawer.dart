@@ -19,9 +19,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     if (activePage != pageName) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => screen,
-        ),
+        MaterialPageRoute(builder: (context) => screen),
       );
     }
   }
@@ -108,7 +106,6 @@ class CustomNavigationDrawer extends StatelessWidget {
               },
             ),
 
-            _buildMenuItem(context, 'Meetings'),
 
             const SizedBox(height: 30),
 
@@ -227,23 +224,37 @@ class CustomNavigationDrawer extends StatelessWidget {
               return;
             }
 
-            Widget nextPage;
-            if (title == 'Team Analytics') {
-              nextPage = const ProductTaskPage(initialTab: 2);
-            } else if (title == 'Dashboard') {
+            if (onTap != null) {
+              onTap();
+              return;
+            }
+
+            Widget? nextPage;
+
+            if (title == 'Dashboard') {
               nextPage = const ProductTaskPage(initialTab: 1);
+            } else if (title == 'Team Analytics') {
+              nextPage = const ProductTaskPage(initialTab: 2);
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
+            } else if (title == 'Calendar') {
+              nextPage = const ProjectCalendarScreen();
+            } else if (title == 'Team Invite') {
+              nextPage = const InviteTeamMembersScreen();
             } else if (title == 'Project Details') {
               nextPage = const ProjectDetails(initialTabIndex: 0);
-            } else {
+            }
+
+            if (nextPage == null) {
               Navigator.pop(context);
               return;
             }
 
+            Navigator.pop(context);
+
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => nextPage),
+              MaterialPageRoute(builder: (context) => nextPage!),
             );
           },
           borderRadius: BorderRadius.circular(16),
