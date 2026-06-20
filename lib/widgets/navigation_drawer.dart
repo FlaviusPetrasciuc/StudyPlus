@@ -6,7 +6,6 @@ import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
 import '../screens/project_details.dart';
 import '../pages/productTaskPage/product_task_page.dart';
-import '../pages/createProjectPage/models/project.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -20,9 +19,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     if (activePage != pageName) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => screen,
-        ),
+        MaterialPageRoute(builder: (context) => screen),
       );
     }
   }
@@ -109,7 +106,6 @@ class CustomNavigationDrawer extends StatelessWidget {
               },
             ),
 
-            _buildMenuItem(context, 'Meetings'),
 
             const SizedBox(height: 30),
 
@@ -228,24 +224,37 @@ class CustomNavigationDrawer extends StatelessWidget {
               return;
             }
 
-            Widget nextPage;
-            // ProductTaskPage requires a real Project now, not const
+            if (onTap != null) {
+              onTap();
+              return;
+            }
+
+            Widget? nextPage;
+
             if (title == 'Dashboard') {
-              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
-            } else if (title == 'Task Assignment') {
-              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
+              nextPage = const ProductTaskPage(initialTab: 1);
+            } else if (title == 'Team Analytics') {
+              nextPage = const ProductTaskPage(initialTab: 2);
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
+            } else if (title == 'Calendar') {
+              nextPage = const ProjectCalendarScreen();
+            } else if (title == 'Team Invite') {
+              nextPage = const InviteTeamMembersScreen();
             } else if (title == 'Project Details') {
               nextPage = const ProjectDetails(initialTabIndex: 0);
-            } else {
+            }
+
+            if (nextPage == null) {
               Navigator.pop(context);
               return;
             }
 
+            Navigator.pop(context);
+
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => nextPage),
+              MaterialPageRoute(builder: (context) => nextPage!),
             );
           },
           borderRadius: BorderRadius.circular(16),

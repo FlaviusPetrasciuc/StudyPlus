@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../auth/auth_gate.dart';
+import '../utils/supabase_debug.dart';
 import 'login_screen.dart';
+import 'verify_email_screen.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -36,7 +40,7 @@ class _SignUpState extends State<SignUp> {
         throw Exception('Please fill in all fields');
       }
 
-      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
 
       if (!emailRegex.hasMatch(email)) {
         throw Exception('Please enter a valid email address');
@@ -54,7 +58,7 @@ class _SignUpState extends State<SignUp> {
         throw Exception('Password must contain at least one special character');
       }
 
-      await Supabase.instance.client.auth.signUp(
+      final response = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
         data: {
@@ -65,19 +69,25 @@ class _SignUpState extends State<SignUp> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account created successfully. You can sign in now.'),
-        ),
-      );
+      if (response.session != null) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AuthGate(),
+          ),
+              (route) => false,
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerifyEmailScreen(email: email),
+          ),
+        );
+      }
+    } on AuthException catch (error, stackTrace) {
+      logSupabaseError('signup', error, stackTrace);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    } on AuthException catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +96,9 @@ class _SignUpState extends State<SignUp> {
           backgroundColor: Colors.red,
         ),
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      logSupabaseError('signup', error, stackTrace);
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
