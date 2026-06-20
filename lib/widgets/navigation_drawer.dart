@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 import '../auth/auth_service.dart';
 import '../screens/login_screen.dart';
 import '../screens/invite_team_members_screen.dart';
@@ -20,9 +21,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     if (activePage != pageName) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => screen,
-        ),
+        MaterialPageRoute(builder: (context) => screen),
       );
     }
   }
@@ -83,7 +82,17 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             _buildSectionTitle('MAIN'),
 
-            _buildMenuItem(context, 'Dashboard'),
+            _buildMenuItem(
+                context,
+                'Dashboard',
+              onTap: () {
+                _navigateTo(
+                    context,
+                    "Dashboard",
+                    const CreateProjectPage(),
+                );
+              }
+            ),
             
             _buildMenuItem(context, 'My Account'),
 
@@ -111,7 +120,6 @@ class CustomNavigationDrawer extends StatelessWidget {
               },
             ),
 
-            _buildMenuItem(context, 'Meetings'),
 
             const SizedBox(height: 30),
 
@@ -230,8 +238,16 @@ class CustomNavigationDrawer extends StatelessWidget {
               return;
             }
 
-            Widget nextPage;
-            if (title == 'Team Analytics') {
+            if (onTap != null) {
+              onTap();
+              return;
+            }
+
+            Widget? nextPage;
+
+            if (title == 'Dashboard') {
+              nextPage = const ProductTaskPage(initialTab: 1);
+            } else if (title == 'Team Analytics') {
               nextPage = const ProductTaskPage(initialTab: 2);
             } else if (title == 'Dashboard') {
               nextPage = const ProductTaskPage(initialTab: 1);
@@ -239,16 +255,24 @@ class CustomNavigationDrawer extends StatelessWidget {
               nextPage = const MyAccountScreen();
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
+            } else if (title == 'Calendar') {
+              nextPage = const ProjectCalendarScreen();
+            } else if (title == 'Team Invite') {
+              nextPage = const InviteTeamMembersScreen();
             } else if (title == 'Project Details') {
               nextPage = const ProjectDetails(initialTabIndex: 0);
-            } else {
+            }
+
+            if (nextPage == null) {
               Navigator.pop(context);
               return;
             }
 
+            Navigator.pop(context);
+
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => nextPage),
+              MaterialPageRoute(builder: (context) => nextPage!),
             );
           },
           borderRadius: BorderRadius.circular(16),
