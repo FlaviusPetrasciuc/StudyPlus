@@ -5,18 +5,18 @@ import '../screens/invite_team_members_screen.dart';
 import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
 import '../screens/project_details.dart';
-import '../screens/project_overview_screen.dart';
-import '../widgets/analytics_dashboard.dart';
 import '../pages/productTaskPage/product_task_page.dart';
 import '../pages/createProjectPage/models/project.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
   final AuthService _authService = AuthService();
+
   CustomNavigationDrawer({super.key, this.activePage});
 
   void _navigateTo(BuildContext context, String pageName, Widget screen) {
     Navigator.pop(context);
+
     if (activePage != pageName) {
       Navigator.pushReplacement(
         context,
@@ -78,9 +78,13 @@ class CustomNavigationDrawer extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 30),
+
             _buildSectionTitle('MAIN'),
+
             _buildMenuItem(context, 'Dashboard'),
+
             _buildMenuItem(
               context,
               'New Project',
@@ -92,6 +96,7 @@ class CustomNavigationDrawer extends StatelessWidget {
                 );
               },
             ),
+
             _buildMenuItem(
               context,
               'Calendar',
@@ -103,13 +108,18 @@ class CustomNavigationDrawer extends StatelessWidget {
                 );
               },
             ),
+
             _buildMenuItem(context, 'Meetings'),
+
             const SizedBox(height: 30),
+
             _buildSectionTitle('TEAM'),
+
             _buildMenuItem(context, 'Team Dashboard'),
             _buildMenuItem(context, 'Team Analytics'),
             _buildMenuItem(context, 'Activity Feed'),
             _buildMenuItem(context, 'Task Assignment'),
+
             _buildMenuItem(
               context,
               'Team Invite',
@@ -121,9 +131,11 @@ class CustomNavigationDrawer extends StatelessWidget {
                 );
               },
             ),
+
             const SizedBox(height: 40),
             const Divider(),
             const SizedBox(height: 20),
+
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -136,6 +148,7 @@ class CustomNavigationDrawer extends StatelessWidget {
                 child: InkWell(
                   onTap: () async {
                     await _authService.signOut();
+
                     if (context.mounted) {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
@@ -169,6 +182,7 @@ class CustomNavigationDrawer extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
           ],
         ),
@@ -197,6 +211,7 @@ class CustomNavigationDrawer extends StatelessWidget {
         VoidCallback? onTap,
       }) {
     final bool isActive = activePage == title;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8.0),
       width: double.infinity,
@@ -212,33 +227,22 @@ class CustomNavigationDrawer extends StatelessWidget {
               Navigator.pop(context);
               return;
             }
+
             Widget nextPage;
+            // ProductTaskPage requires a real Project now, not const
             if (title == 'Dashboard') {
-              nextPage = ProductTaskPage(
-                project: Project.sample(),
-                initialTab: 1, // Tasks tab
-              );
-            } else if (title == 'Team Analytics') {
-              // Analytics screen takes raw stat counts, not a Project —
-              // _analyticsFromProject() converts Project.sample() into them
-              nextPage = _analyticsScreenFor(Project.sample());
+              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
             } else if (title == 'Task Assignment') {
-              nextPage = ProductTaskPage(
-                project: Project.sample(),
-                initialTab: 1, // Tasks tab
-              );
-            } else if (title == 'Team Dashboard' || title == 'Project Details') {
-              // Overview screen takes a ProjectData — _overviewDataFor()
-              // converts Project.sample() into the shape it expects
-              nextPage = ProjectOverviewScreen(
-                project: _overviewDataFor(Project.sample()),
-              );
+              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
+            } else if (title == 'Project Details') {
+              nextPage = const ProjectDetails(initialTabIndex: 0);
             } else {
               Navigator.pop(context);
               return;
             }
+
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => nextPage),
@@ -263,55 +267,4 @@ class CustomNavigationDrawer extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Project → ProjectOverviewScreen adapter ─────────────────────────────
-ProjectData _overviewDataFor(Project project) {
-  final totalHours = project.tasks.fold<double>(
-      0, (sum, t) => sum + t.spentHours);
-
-  return ProjectData(
-    name: project.title,
-    teamCount: 6, // placeholder until real team data is wired in
-    progress: project.progress * 100,
-    completedTasks: project.tasksDone,
-    totalTasks: project.totalTasks,
-    timeSpent: totalHours.round(),
-    inProgress:
-    project.tasks.where((t) => t.status == 'In Progress').length,
-    timelineStart: 'Start',
-    timelineEnd: project.deadline != null
-        ? '${project.deadline!.day}/${project.deadline!.month}'
-        : 'No deadline',
-    timelinePercent: project.progress,
-    members: const [], // placeholder until real team data is wired in
-  );
-}
-
-// ── Project → AnalyticsDashboard adapter ────────────────────────────────
-Widget _analyticsScreenFor(Project project) {
-  final total      = project.totalTasks;
-  final completed  = project.tasksDone;
-  final inProgress = project.tasks.where((t) => t.status == 'In Progress').length;
-  final pending    = total - completed - inProgress;
-  final totalHours = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
-
-  return Scaffold(
-    backgroundColor: const Color(0xFFEEEFF4),
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      iconTheme: const IconThemeData(color: Colors.black87),
-      title: const Text('Analytics',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-    ),
-    body: AnalyticsDashboard(
-      totalTasks: total,
-      completedTasks: completed,
-      inProgressTasks: inProgress,
-      pendingTasks: pending < 0 ? 0 : pending,
-      completionRate: total == 0 ? 0 : (completed / total) * 100,
-      totalHours: totalHours.round(),
-    ),
-  );
 }
