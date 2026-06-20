@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
-import '../../widgets/analytics_dashboard.dart';
-import '../../widgets/menu_button.dart';
-import '../../widgets/navigation_drawer.dart';
 import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
+import '../createProjectPage/models/project.dart';
 
 class ProductTaskPage extends StatefulWidget {
-  final int? initialTab;
-  const ProductTaskPage({super.key, this.initialTab});
+  // The project whose tasks this page displays. Title, member count,
+  // and the task list itself all come from this project now instead
+  // of being hard-coded or pulled from the old global fakeProductTasks list.
+  final Project project;
+
+  // Optional — lets callers (like the navigation drawer) deep-link
+  // straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
+  // Defaults to 1 (Tasks) if not provided.
+  final int initialTab;
+
+  const ProductTaskPage({
+    super.key,
+    required this.project,
+    this.initialTab = 1,
+  });
 
   @override
   State<ProductTaskPage> createState() => _ProductTaskPageState();
 }
 
 class _ProductTaskPageState extends State<ProductTaskPage> {
-  late int _selectedTab;
+  late int _selectedTab; // seeded from widget.initialTab in initState
 
   @override
   void initState() {
     super.initState();
-    _selectedTab = widget.initialTab ?? 1; // 0=Overview, 1=Tasks, 2=Analytics
+    _selectedTab = widget.initialTab;
   }
 
   void _refresh() => setState(() {});
@@ -34,9 +45,10 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => _CreateTaskSheet(
+        groups: widget.project.groups, // pass project groups into the sheet
         onCreated: (newTask) {
-          // Add the new task to the list and rebuild the page
-          setState(() => fakeProductTasks.add(newTask));
+          // Add the new task to THIS project's task list and rebuild
+          setState(() => widget.project.tasks.add(newTask));
         },
       ),
     );
@@ -46,7 +58,6 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
-      endDrawer: CustomNavigationDrawer(activePage: 'Project Details'),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,26 +84,40 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Product Launch Q2 2026',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87),
-              ),
-              const SizedBox(height: 2),
-              Text('6 team members',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
-            ],
+          // Back arrow returns to the Projects page
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back, color: Colors.black87, size: 22),
           ),
-          const MenuButton(),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Project title comes from widget.project, not hard-coded
+                Text(
+                  widget.project.title,
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87),
+                ),
+                const SizedBox(height: 2),
+                Text('${widget.project.totalTasks} tasks',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+              ],
+            ),
+          ),
+          Container(
+            width: 40, height: 40,
+            decoration: const BoxDecoration(
+                color: Color(0xFF2563EB), shape: BoxShape.circle),
+            child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+          ),
+          const SizedBox(height: 8), // bottom breathing room before divider
         ],
       ),
     );
@@ -139,63 +164,22 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
 
   Widget _buildTabContent() {
     switch (_selectedTab) {
-      case 0:
-    return _buildOverviewTab();
-      case 1:
-        return _buildTasksTab();
-      case 2:
-        return _buildAnalyticsTab();
-      default:
-        return _buildTasksTab();
+      case 0:  return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
+      case 1:  return _buildTasksTab();
+      case 2:  return _buildPlaceholder(Icons.pie_chart_outline_rounded, 'Analytics coming soon');
+      default: return _buildTasksTab();
     }
-  }
-
-  Widget _buildAnalyticsTab() {
-    final int totalTasks = fakeProductTasks.length;
-    final int completedTasks =
-        fakeProductTasks.where((t) => t.status == 'Done').length;
-    final int inProgressTasks =
-        fakeProductTasks.where((t) => t.status == 'In Progress').length;
-    
-    // Any task that isn't 'Done' or 'In Progress' is counted as 'Pending'
-    final int pendingTasks = totalTasks - completedTasks - inProgressTasks;
-
-    final double completionRate =
-        totalTasks == 0 ? 0 : (completedTasks / totalTasks) * 100;
-
-    // Helper to parse "2h", "30m", "1h 30m" into hours
-    double totalHours = 0;
-    for (var task in fakeProductTasks) {
-      final time = task.estimatedTime.toLowerCase();
-      if (time.contains('h')) {
-        final parts = time.split('h');
-        totalHours += double.tryParse(parts[0]) ?? 0;
-        if (parts.length > 1 && parts[1].contains('m')) {
-          totalHours += (double.tryParse(parts[1].replaceAll('m', '').trim()) ?? 0) / 60;
-        }
-      } else if (time.contains('m')) {
-        totalHours += (double.tryParse(time.replaceAll('m', '').trim()) ?? 0) / 60;
-      }
-    }
-
-    return AnalyticsDashboard(
-      totalTasks: totalTasks,
-      completedTasks: completedTasks,
-      inProgressTasks: inProgressTasks,
-      pendingTasks: pendingTasks,
-      completionRate: completionRate,
-      totalHours: totalHours.toInt(),
-    );
   }
 
   Widget _buildTasksTab() {
+    final tasks = widget.project.tasks; // this project's tasks only
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      itemCount: fakeProductTasks.length + 1,
+      itemCount: tasks.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) return _buildCreateButton();
         return ProductTaskCard(
-            task: fakeProductTasks[index - 1], onUpdate: _refresh);
+            task: tasks[index - 1], onUpdate: _refresh);
       },
     );
   }
@@ -209,92 +193,6 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
           const SizedBox(height: 12),
           Text(message,
               style: TextStyle(fontSize: 15, color: Colors.grey.shade400)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOverviewTab() {
-    final int totalTasks = fakeProductTasks.length;
-    final int completedTasks = fakeProductTasks.where((t) => t.status == 'Done').length;
-    final int inProgressTasks = fakeProductTasks.where((t) => t.status == 'In Progress').length;
-    double totalHours = 0;
-    for (var task in fakeProductTasks) {
-      totalHours += task.estimatedHours;
-    }
-    final double progress = totalTasks == 0 ? 0 : (completedTasks / totalTasks * 100);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.4,
-            children: [
-              _buildStatCard(icon: Icons.track_changes_rounded, iconColor: const Color(0xFF2979FF), iconBg: const Color(0xFFE3EDFF), label: 'Progress', value: '${progress.toInt()}%'),
-              _buildStatCard(icon: Icons.check_circle_outline_rounded, iconColor: const Color(0xFF00C48C), iconBg: const Color(0xFFE0F7F1), label: 'Completed', value: '$completedTasks/$totalTasks'),
-              _buildStatCard(icon: Icons.access_time_rounded, iconColor: const Color(0xFFFF9F43), iconBg: const Color(0xFFFFF3E0), label: 'Time Spent', value: '${totalHours.toInt()}h'),
-              _buildStatCard(icon: Icons.group_outlined, iconColor: const Color(0xFF9B59B6), iconBg: const Color(0xFFF3E5F5), label: 'In Progress', value: '$inProgressTasks'),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Timeline', style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.black87)),
-                const SizedBox(height: 16),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Mar 1', style: TextStyle(fontSize: 12.0, color: Colors.black45)),
-                    Text('May 20', style: TextStyle(fontSize: 12.0, color: Colors.black45)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: const LinearProgressIndicator(value: 0.42, backgroundColor: Color(0xFFEEEFF4), valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2979FF)), minHeight: 8),
-                ),
-                const SizedBox(height: 8),
-                const Center(child: Text('42% complete', style: TextStyle(fontSize: 12.0, color: Colors.black45))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({required IconData icon, required Color iconColor, required Color iconBg, required String label, required String value}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 12.0, color: Colors.black45, fontWeight: FontWeight.w400)),
-              const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 22.0, fontWeight: FontWeight.w700, color: Colors.black87, letterSpacing: -0.5)),
-            ],
-          ),
         ],
       ),
     );
@@ -348,7 +246,11 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
 // A self-contained widget so its own setState doesn't rebuild the whole page
 class _CreateTaskSheet extends StatefulWidget {
   final ValueChanged<ProductTask> onCreated;
-  const _CreateTaskSheet({required this.onCreated});
+  // Groups belonging to the project this task is being created in —
+  // lets the user pick an existing group instead of only creating new ones
+  final List<TaskGroup> groups;
+
+  const _CreateTaskSheet({required this.onCreated, required this.groups});
 
   @override
   State<_CreateTaskSheet> createState() => _CreateTaskSheetState();
@@ -362,6 +264,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
   final _estimatedTimeController = TextEditingController();
   String   _selectedPriority     = 'Medium';
   DateTime _dueDateTime          = DateTime.now().add(const Duration(days: 7));
+  TaskGroup? _selectedGroup;     // optional group picked from the project's groups
 
   static const List<String> _priorityOptions = ['High', 'Medium', 'Low'];
 
@@ -455,6 +358,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
       progress:       0.0,
       estimatedTime:  estText,    // human-readable string shown as chip
       estimatedHours: estHours,   // numeric value used for the progress bar
+      group:          _selectedGroup, // attach the picked group, if any
       checklist:      [],
     );
 
@@ -586,6 +490,53 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
               }).toList(),
             ),
             const SizedBox(height: 16),
+
+            // ── Group picker — only shown if the project has groups ──
+            if (widget.groups.isNotEmpty) ...[
+              _fieldLabel('Group'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.groups.map((g) {
+                  final isSelected = _selectedGroup == g;
+                  return GestureDetector(
+                    onTap: () => setState(() =>
+                    _selectedGroup = isSelected ? null : g), // tap again to deselect
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? g.color.withOpacity(0.15)
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? g.color : Colors.transparent,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8, height: 8,
+                            decoration: BoxDecoration(
+                                color: g.color, shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(g.name,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected ? g.color : Colors.black54)),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // ── Estimated time ──
             _fieldLabel('Estimated Time'),
