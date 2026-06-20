@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
 import '../createProjectPage/models/project.dart';
+import '../../screens/project_overview_screen.dart';
+import '../../widgets/analytics_dashboard.dart';
 
 class ProductTaskPage extends StatefulWidget {
   // The project whose tasks this page displays. Title, member count,
@@ -133,7 +135,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
           final label    = entry.value;
           final selected = _selectedTab == index;
           return GestureDetector(
-            onTap: () => setState(() => _selectedTab = index),
+            onTap: () => _handleTabTap(index),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Column(
@@ -162,14 +164,30 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  Widget _buildTabContent() {
-    switch (_selectedTab) {
-      case 0:  return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
-      case 1:  return _buildTasksTab();
-      case 2:  return _buildPlaceholder(Icons.pie_chart_outline_rounded, 'Analytics coming soon');
-      default: return _buildTasksTab();
+  // Overview and Analytics push the real existing screens (built by the
+  // team) instead of showing anything inline. Tasks stays as the only
+  // tab with content rendered directly on this page.
+  void _handleTabTap(int index) {
+    if (index == 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProjectOverviewScreen(project: _overviewDataFor(widget.project)),
+        ),
+      );
+      return;
     }
+    if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => _analyticsScreenFor(widget.project)),
+      );
+      return;
+    }
+    setState(() => _selectedTab = index); // only Tasks (index 1) changes the page itself
   }
+
+  Widget _buildTabContent() => _buildTasksTab(); // only Tasks renders inline now
 
   Widget _buildTasksTab() {
     final tasks = widget.project.tasks; // this project's tasks only
@@ -184,16 +202,50 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  Widget _buildPlaceholder(IconData icon, String message) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 48, color: Colors.grey.shade300),
-          const SizedBox(height: 12),
-          Text(message,
-              style: TextStyle(fontSize: 15, color: Colors.grey.shade400)),
-        ],
+  // Builds the ProjectData shape ProjectOverviewScreen expects
+  ProjectData _overviewDataFor(Project project) {
+    final totalHours = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
+    return ProjectData(
+      name: project.title,
+      teamCount: 6, // placeholder until real team data exists
+      progress: project.progress * 100,
+      completedTasks: project.tasksDone,
+      totalTasks: project.totalTasks,
+      timeSpent: totalHours.round(),
+      inProgress: project.tasks.where((t) => t.status == 'In Progress').length,
+      timelineStart: 'Start',
+      timelineEnd: project.deadline != null
+          ? '${project.deadline!.day}/${project.deadline!.month}'
+          : 'No deadline',
+      timelinePercent: project.progress,
+      members: const [], // placeholder until real team data exists
+    );
+  }
+
+  // Builds the AnalyticsDashboard screen with stat counts from a Project
+  Widget _analyticsScreenFor(Project project) {
+    final total      = project.totalTasks;
+    final completed  = project.tasksDone;
+    final inProgress = project.tasks.where((t) => t.status == 'In Progress').length;
+    final pending    = total - completed - inProgress;
+    final totalHours = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFEEEFF4),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        title: const Text('Analytics',
+            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+      ),
+      body: AnalyticsDashboard(
+        totalTasks: total,
+        completedTasks: completed,
+        inProgressTasks: inProgress,
+        pendingTasks: pending < 0 ? 0 : pending,
+        completionRate: total == 0 ? 0 : (completed / total) * 100,
+        totalHours: totalHours.round(),
       ),
     );
   }
@@ -499,7 +551,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
                 spacing: 8,
                 runSpacing: 8,
                 children: widget.groups.map((g) {
-                  final isSelected = _selectedGroup == g;
+                  final isSelected = _selectedGroup?.name == g.name;
                   return GestureDetector(
                     onTap: () => setState(() =>
                     _selectedGroup = isSelected ? null : g), // tap again to deselect
