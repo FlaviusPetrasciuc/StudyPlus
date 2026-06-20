@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:study_plus/screens/login_screen.dart';
-import 'package:study_plus/screens/create_project_screen.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -23,7 +23,7 @@ class AuthGate extends StatelessWidget {
 
         if (session != null) {
           // User is signed in
-          return const CreateProjectScreen();
+          return const CreateProjectPage();
         } else {
           // User is NOT signed in
           return const LoginScreen();

@@ -41,4 +41,16 @@ class AuthService {
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
+
+  // Get current user email
+  String? getCurrentUserEmail() {
+    return _supabase.auth.currentUser?.email;
+  }
+
+  // Change password
+  Future<void> changePassword(String newPassword) async {
+    await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+  }
 }
