@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'widgets/project_card.dart';
 import 'models/project.dart';
-import '../productTaskPage/models/product_task_module.dart';
 
 class CreateProjectPage extends StatefulWidget {
   // Changed from StatelessWidget → StatefulWidget so we can
@@ -223,6 +222,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
+      endDrawer: CustomNavigationDrawer(activePage: 'Dashboard'),
       body: Stack(
         children: [
 
@@ -257,21 +257,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                           ),
                         ],
                       ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.menu,
-                              color: Colors.white, size: 20),
-                          onPressed: () {
-                            // TODO: hook up drawer later
-                          },
-                        ),
-                      ),
+                      const MenuButton(),
                     ],
                   ),
 

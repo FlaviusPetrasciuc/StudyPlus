@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 import '../auth/auth_service.dart';
 import '../screens/login_screen.dart';
 import '../screens/invite_team_members_screen.dart';
@@ -6,7 +7,7 @@ import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
 import '../screens/project_details.dart';
 import '../pages/productTaskPage/product_task_page.dart';
-import '../pages/createProjectPage/models/project.dart';
+import '../screens/my_account_screen.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -81,7 +82,19 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             _buildSectionTitle('MAIN'),
 
-            _buildMenuItem(context, 'Dashboard'),
+            _buildMenuItem(
+                context,
+                'Dashboard',
+              onTap: () {
+                _navigateTo(
+                    context,
+                    "Dashboard",
+                    const CreateProjectPage(),
+                );
+              }
+            ),
+            
+            _buildMenuItem(context, 'My Account'),
 
             _buildMenuItem(
               context,
@@ -107,6 +120,7 @@ class CustomNavigationDrawer extends StatelessWidget {
               },
             ),
 
+
             const SizedBox(height: 30),
 
             _buildSectionTitle('TEAM'),
@@ -114,6 +128,7 @@ class CustomNavigationDrawer extends StatelessWidget {
             _buildMenuItem(context, 'Team Dashboard'),
             _buildMenuItem(context, 'Team Analytics'),
             _buildMenuItem(context, 'Activity Feed'),
+            _buildMenuItem(context, 'Task Assignment'),
 
             _buildMenuItem(
               context,
@@ -230,12 +245,14 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             Widget? nextPage;
 
-            // ProductTaskPage requires a real Project — not const, since
-            // Project.sample() builds an object at runtime
             if (title == 'Dashboard') {
-              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
+              nextPage = const ProductTaskPage(initialTab: 1);
             } else if (title == 'Team Analytics') {
-              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 2);
+              nextPage = const ProductTaskPage(initialTab: 2);
+            } else if (title == 'Dashboard') {
+              nextPage = const ProductTaskPage(initialTab: 1);
+            } else if (title == 'My Account') {
+              nextPage = const MyAccountScreen();
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
             } else if (title == 'Calendar') {
