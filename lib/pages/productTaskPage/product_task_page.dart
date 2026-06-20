@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
 import '../createProjectPage/models/project.dart';
-import '../../screens/project_overview_screen.dart';
 import '../../widgets/analytics_dashboard.dart';
 
 class ProductTaskPage extends StatefulWidget {
+  // The project whose tasks this page displays. Title, member count,
+  // and the task list itself all come from this project now instead
+  // of being hard-coded or pulled from the old global fakeProductTasks list.
   final Project project;
 
-  // navigate straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
+  // Optional — lets callers (like the navigation drawer) deep-link
+  // straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
+  // Defaults to 1 (Tasks) if not provided.
   final int initialTab;
 
   const ProductTaskPage({
@@ -27,12 +31,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   @override
   void initState() {
     super.initState();
-    _selectedTab = widget.initialTab;
-    if (widget.initialTab == 0 || widget.initialTab == 2) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleTabTap(widget.initialTab);
-      });
-    }
+    _selectedTab = widget.initialTab; // tab content swaps inline, no navigation needed
   }
 
   void _refresh() => setState(() {});
@@ -164,30 +163,20 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  // Overview and Analytics push the real existing screens (built by the
-  // team) instead of showing anything inline. Tasks stays as the only
-  // tab with content rendered directly on this page.
+  // Tab tap just switches which content shows below the header/tab bar —
+  // no navigation, no separate pages, no duplicate headers.
   void _handleTabTap(int index) {
-    if (index == 0) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProjectOverviewScreen(project: _overviewDataFor(widget.project)),
-        ),
-      );
-      return;
-    }
-    if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => _analyticsScreenFor(widget.project)),
-      );
-      return;
-    }
-    setState(() => _selectedTab = index); // only Tasks (index 1) changes the page itself
+    setState(() => _selectedTab = index);
   }
 
-  Widget _buildTabContent() => _buildTasksTab(); // only Tasks renders inline now
+  Widget _buildTabContent() {
+    switch (_selectedTab) {
+      case 0:  return _buildOverviewTab();
+      case 1:  return _buildTasksTab();
+      case 2:  return _buildAnalyticsTab();
+      default: return _buildTasksTab();
+    }
+  }
 
   Widget _buildTasksTab() {
     final tasks = widget.project.tasks; // this project's tasks only
@@ -202,51 +191,182 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  // Builds the ProjectData shape ProjectOverviewScreen expects
-  ProjectData _overviewDataFor(Project project) {
-    final totalHours = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
-    return ProjectData(
-      name: project.title,
-      teamCount: 6, // placeholder until real team data exists
-      progress: project.progress * 100,
-      completedTasks: project.tasksDone,
-      totalTasks: project.totalTasks,
-      timeSpent: totalHours.round(),
-      inProgress: project.tasks.where((t) => t.status == 'In Progress').length,
-      timelineStart: 'Start',
-      timelineEnd: project.deadline != null
-          ? '${project.deadline!.day}/${project.deadline!.month}'
-          : 'No deadline',
-      timelinePercent: project.progress,
-      members: const [], // placeholder until real team data exists
+  // ── Overview tab content — same cards as ProjectOverviewScreen's
+  // Overview tab, rebuilt here so it renders under our shared header
+  // instead of that screen's own separate header.
+  Widget _buildOverviewTab() {
+    final project      = widget.project;
+    final totalHours   = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
+    final inProgress   = project.tasks.where((t) => t.status == 'In Progress').length;
+    final progressPct  = (project.progress * 100).round();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 2x2 stat grid: Progress, Completed, Time Spent, In Progress
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.4,
+            children: [
+              _overviewStatCard(
+                icon: Icons.track_changes_rounded,
+                iconColor: const Color(0xFF2979FF),
+                iconBg: const Color(0xFFE3EDFF),
+                label: 'Progress',
+                value: '$progressPct%',
+              ),
+              _overviewStatCard(
+                icon: Icons.check_circle_outline_rounded,
+                iconColor: const Color(0xFF00C48C),
+                iconBg: const Color(0xFFE0F7F1),
+                label: 'Completed',
+                value: '${project.tasksDone}/${project.totalTasks}',
+              ),
+              _overviewStatCard(
+                icon: Icons.access_time_rounded,
+                iconColor: const Color(0xFFFF9F43),
+                iconBg: const Color(0xFFFFF3E0),
+                label: 'Time Spent',
+                value: '${totalHours.round()}h',
+              ),
+              _overviewStatCard(
+                icon: Icons.group_outlined,
+                iconColor: const Color(0xFF9B59B6),
+                iconBg: const Color(0xFFF3E5F5),
+                label: 'In Progress',
+                value: '$inProgress',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Timeline card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Timeline',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Start',
+                        style: TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500)),
+                    Text(
+                      project.deadline != null
+                          ? '${project.deadline!.day}/${project.deadline!.month}'
+                          : 'No deadline',
+                      style: const TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: LinearProgressIndicator(
+                    value: project.progress,
+                    backgroundColor: const Color(0xFFEEEFF4),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2979FF)),
+                    minHeight: 8,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: Text('$progressPct% complete',
+                      style: const TextStyle(fontSize: 12, color: Colors.black45)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Team Members card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Team Members',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+                Text('Invite',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.blue.shade600)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  // Builds the AnalyticsDashboard screen with stat counts from a Project
-  Widget _analyticsScreenFor(Project project) {
-    final total      = project.totalTasks;
-    final completed  = project.tasksDone;
-    final inProgress = project.tasks.where((t) => t.status == 'In Progress').length;
-    final pending    = total - completed - inProgress;
-    final totalHours = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
+  Widget _overviewStatCard({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 12, color: Colors.black45)),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.black87)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFEEEFF4),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        title: const Text('Analytics',
-            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-      ),
-      body: AnalyticsDashboard(
-        totalTasks: total,
-        completedTasks: completed,
-        inProgressTasks: inProgress,
-        pendingTasks: pending < 0 ? 0 : pending,
-        completionRate: total == 0 ? 0 : (completed / total) * 100,
-        totalHours: totalHours.round(),
-      ),
+  // ── Analytics tab content — AnalyticsDashboard itself has no header
+  // of its own, so it drops in directly under our shared header/tab bar.
+  Widget _buildAnalyticsTab() {
+    final project     = widget.project;
+    final total       = project.totalTasks;
+    final completed   = project.tasksDone;
+    final inProgress  = project.tasks.where((t) => t.status == 'In Progress').length;
+    final pending     = total - completed - inProgress;
+    final totalHours  = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
+
+    return AnalyticsDashboard(
+      totalTasks: total,
+      completedTasks: completed,
+      inProgressTasks: inProgress,
+      pendingTasks: pending < 0 ? 0 : pending,
+      completionRate: total == 0 ? 0 : (completed / total) * 100,
+      totalHours: totalHours.round(),
     );
   }
 

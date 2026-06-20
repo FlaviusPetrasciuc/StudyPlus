@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/navigation_drawer.dart';
+import '../productTaskPage/models/product_task_module.dart';
 import 'widgets/project_card.dart';
 import 'models/project.dart';
 
@@ -60,31 +62,6 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
         ProductTask(title: "QA sign-off", description: "Final QA pass before release",
             dueDate: "May 25", status: "To Do", priority: "High", progress: 0,
             group: _mobileDevGroup, checklist: []),
-      ],
-    ),
-    Project(
-      title: "Website Migration",
-      deadline: DateTime.now().add(const Duration(days: 31)),
-      groups: [_migrationGroup],
-      tasks: [
-        ProductTask(title: "Audit existing content", description: "Inventory all current pages",
-            dueDate: "Jun 1", status: "Done", priority: "Medium", progress: 1.0,
-            group: _migrationGroup, checklist: []),
-        ProductTask(title: "Set up new hosting", description: "Provision the new server environment",
-            dueDate: "Jun 4", status: "Done", priority: "High", progress: 1.0,
-            group: _migrationGroup, checklist: []),
-        ProductTask(title: "Migrate pages", description: "Move content to the new platform",
-            dueDate: "Jun 10", status: "Done", priority: "High", progress: 1.0,
-            group: _migrationGroup, checklist: []),
-        ProductTask(title: "Redirect mapping", description: "Map old URLs to new ones",
-            dueDate: "Jun 14", status: "To Do", priority: "Medium", progress: 0,
-            group: _migrationGroup, checklist: []),
-        ProductTask(title: "SEO check", description: "Verify metadata and sitemap",
-            dueDate: "Jun 18", status: "To Do", priority: "Medium", progress: 0,
-            group: _migrationGroup, checklist: []),
-        ProductTask(title: "Go live", description: "Final cutover to the new site",
-            dueDate: "Jun 22", status: "To Do", priority: "High", progress: 0,
-            group: _migrationGroup, checklist: []),
       ],
     ),
   ];
@@ -257,7 +234,21 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                           ),
                         ],
                       ),
-                      const MenuButton(),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.menu,
+                              color: Colors.white, size: 20),
+                          onPressed: () {
+                            // TODO: hook up drawer later
+                          },
+                        ),
+                      ),
                     ],
                   ),
 
