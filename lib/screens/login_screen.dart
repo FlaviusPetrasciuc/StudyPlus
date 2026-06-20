@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/supabase_debug.dart';
-import 'create_project_screen.dart';
 import 'signup.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const CreateProjectScreen(),
+          builder: (context) => const CreateProjectPage(),
         ),
       );
     } on AuthException catch (error, stackTrace) {
