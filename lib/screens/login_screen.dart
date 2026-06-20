@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/supabase_debug.dart';
 import 'create_project_screen.dart';
 import 'signup.dart';
 
@@ -48,13 +49,17 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context) => const CreateProjectScreen(),
         ),
       );
-    } on AuthException catch (error) {
+    } on AuthException catch (error, stackTrace) {
+      logSupabaseError('login', error, stackTrace);
+
       if (!mounted) return;
 
       setState(() {
         _errorMessage = error.message;
       });
-    } catch (error) {
+    } catch (error, stackTrace) {
+      logSupabaseError('login', error, stackTrace);
+
       if (!mounted) return;
 
       setState(() {

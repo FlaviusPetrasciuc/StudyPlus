@@ -106,7 +106,7 @@ Requirements:
     console.error("Gemini generation error:", error);
 
     res.status(500).json({
-      error: "Failed to generate plan",
+      error: error.message || "Failed to generate plan",
     });
   }
 });
