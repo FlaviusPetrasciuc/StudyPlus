@@ -150,11 +150,10 @@ class ProductTaskCard extends StatelessWidget {
 
             // ── Group chip + time chip + due date ──
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
 
-                // Left side: group chip (if set) or empty space
-                if (task.group != null)
+                // Group chip — shown whenever a group is set
+                if (task.group != null) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -182,41 +181,45 @@ class ProductTaskCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  )
-                else
-                // Time chip — shows remaining hours if any hours have been logged,
-                // otherwise shows the original estimated time
-                  if (task.estimatedHours > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF), // blue-50 background
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.access_time_rounded,
-                              size: 12, color: Color(0xFF2563EB)),
-                          const SizedBox(width: 4),
-                          Text(
-                            // Show remaining if hours logged, else show estimated
-                            task.spentHours > 0
-                                ? _formatHours(task.remainingHours)
-                                : _formatHours(task.estimatedHours),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2563EB), // blue-600
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    const SizedBox(),
+                  ),
+                  const SizedBox(width: 8), // gap before the next chip
+                ],
 
-                // Right side: due date (red + icon if overdue)
+                // Time chip — shown whenever estimated time is set.
+                // Independent of the group chip now, so both can appear together.
+                if (task.estimatedHours > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF), // blue-50 background
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.access_time_rounded,
+                            size: 12, color: Color(0xFF2563EB)),
+                        const SizedBox(width: 4),
+                        Text(
+                          // Show remaining if hours logged, else show estimated
+                          task.spentHours > 0
+                              ? _formatHours(task.remainingHours)
+                              : _formatHours(task.estimatedHours),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2563EB), // blue-600
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Pushes the due date to the far right regardless of
+                // how many chips are showing on the left
+                const Spacer(),
+
+                // Due date (red + icon if overdue)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
