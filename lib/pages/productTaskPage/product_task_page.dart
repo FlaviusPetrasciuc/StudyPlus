@@ -6,14 +6,9 @@ import '../../screens/project_overview_screen.dart';
 import '../../widgets/analytics_dashboard.dart';
 
 class ProductTaskPage extends StatefulWidget {
-  // The project whose tasks this page displays. Title, member count,
-  // and the task list itself all come from this project now instead
-  // of being hard-coded or pulled from the old global fakeProductTasks list.
   final Project project;
 
-  // Optional — lets callers (like the navigation drawer) deep-link
-  // straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
-  // Defaults to 1 (Tasks) if not provided.
+  // navigate straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
   final int initialTab;
 
   const ProductTaskPage({
@@ -33,6 +28,11 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   void initState() {
     super.initState();
     _selectedTab = widget.initialTab;
+    if (widget.initialTab == 0 || widget.initialTab == 2) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleTabTap(widget.initialTab);
+      });
+    }
   }
 
   void _refresh() => setState(() {});
