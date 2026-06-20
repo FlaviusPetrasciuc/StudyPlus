@@ -105,7 +105,7 @@ class Project {
     final qa     = TaskGroup(name: 'QA', color: const Color(0xFF10B981));
 
     return Project(
-      title: 'Sample Project',
+      title: 'Sample Project Data',
       deadline: DateTime.now().add(const Duration(days: 14)),
       groups: [design, dev, qa],
       tasks: [
