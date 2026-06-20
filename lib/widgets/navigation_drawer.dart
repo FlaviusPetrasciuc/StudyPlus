@@ -81,7 +81,17 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             _buildSectionTitle('MAIN'),
 
-            _buildMenuItem(context, 'Dashboard'),
+            // 'Dashboard' now has an explicit onTap that pops back to the
+            // existing Projects page already in the stack — it no longer
+            // falls through to the sample-project fallback below.
+            _buildMenuItem(
+              context,
+              'Dashboard',
+              onTap: () {
+                Navigator.pop(context); // close the drawer first
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
+            ),
 
             _buildMenuItem(
               context,
@@ -232,10 +242,9 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             Widget? nextPage;
 
-            if (title == 'Dashboard') {
-              nextPage = ProductTaskPage(project: Project.sample(),initialTab: 1);
-            } else if (title == 'Team Analytics') {
-              nextPage = ProductTaskPage(project: Project.sample(),initialTab: 2);
+            // 'Dashboard' removed from here — it now has its own onTap above
+            if (title == 'Team Analytics') {
+              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 2);
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
             } else if (title == 'Calendar') {
