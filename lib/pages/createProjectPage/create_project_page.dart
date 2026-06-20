@@ -28,7 +28,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
   // for the Product Launch page.
   late final List<Project> _projects = [
     Project(
-      title: "Mobile App Redesign",
+      title: "Sample Project Data",
       deadline: DateTime.now().add(const Duration(days: 18)),
       groups: [_mobileDesignGroup, _mobileDevGroup],
       tasks: [
