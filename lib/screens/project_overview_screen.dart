@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'invite_team_members_screen.dart';
 
 // Data models
 class TeamMember {
@@ -351,29 +352,10 @@ class _ProjectOverviewScreenState extends State<ProjectOverviewScreen>
               ),
               GestureDetector(
                 onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      title: const Text(
-                        'Invite Member',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      content: const Text(
-                        'Invite functionality coming soon!',
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'OK',
-                            style: TextStyle(color: Color(0xFF2979FF)),
-                          ),
-                        ),
-                      ],
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const InviteTeamMembersScreen(),
                     ),
                   );
                 },

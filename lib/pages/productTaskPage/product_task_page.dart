@@ -58,7 +58,9 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
                   _buildTabBar(),
+                  Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
                 ],
               ),
             ),
@@ -138,7 +140,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   Widget _buildTabContent() {
     switch (_selectedTab) {
       case 0:
-        return _buildPlaceholder(Icons.bar_chart_rounded, 'Overview coming soon');
+    return _buildOverviewTab();
       case 1:
         return _buildTasksTab();
       case 2:
@@ -212,6 +214,92 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
+  Widget _buildOverviewTab() {
+    final int totalTasks = fakeProductTasks.length;
+    final int completedTasks = fakeProductTasks.where((t) => t.status == 'Done').length;
+    final int inProgressTasks = fakeProductTasks.where((t) => t.status == 'In Progress').length;
+    double totalHours = 0;
+    for (var task in fakeProductTasks) {
+      totalHours += task.estimatedHours;
+    }
+    final double progress = totalTasks == 0 ? 0 : (completedTasks / totalTasks * 100);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.4,
+            children: [
+              _buildStatCard(icon: Icons.track_changes_rounded, iconColor: const Color(0xFF2979FF), iconBg: const Color(0xFFE3EDFF), label: 'Progress', value: '${progress.toInt()}%'),
+              _buildStatCard(icon: Icons.check_circle_outline_rounded, iconColor: const Color(0xFF00C48C), iconBg: const Color(0xFFE0F7F1), label: 'Completed', value: '$completedTasks/$totalTasks'),
+              _buildStatCard(icon: Icons.access_time_rounded, iconColor: const Color(0xFFFF9F43), iconBg: const Color(0xFFFFF3E0), label: 'Time Spent', value: '${totalHours.toInt()}h'),
+              _buildStatCard(icon: Icons.group_outlined, iconColor: const Color(0xFF9B59B6), iconBg: const Color(0xFFF3E5F5), label: 'In Progress', value: '$inProgressTasks'),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Timeline', style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w600, color: Colors.black87)),
+                const SizedBox(height: 16),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Mar 1', style: TextStyle(fontSize: 12.0, color: Colors.black45)),
+                    Text('May 20', style: TextStyle(fontSize: 12.0, color: Colors.black45)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: const LinearProgressIndicator(value: 0.42, backgroundColor: Color(0xFFEEEFF4), valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2979FF)), minHeight: 8),
+                ),
+                const SizedBox(height: 8),
+                const Center(child: Text('42% complete', style: TextStyle(fontSize: 12.0, color: Colors.black45))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({required IconData icon, required Color iconColor, required Color iconBg, required String label, required String value}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 12.0, color: Colors.black45, fontWeight: FontWeight.w400)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(fontSize: 22.0, fontWeight: FontWeight.w700, color: Colors.black87, letterSpacing: -0.5)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // Tapping this now calls _openCreateSheet
   Widget _buildCreateButton() {
     return Container(
@@ -269,11 +357,11 @@ class _CreateTaskSheet extends StatefulWidget {
 class _CreateTaskSheetState extends State<_CreateTaskSheet> {
 
   // Form fields
-  final _titleController       = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _titleController         = TextEditingController();
+  final _descriptionController   = TextEditingController();
   final _estimatedTimeController = TextEditingController();
-  String  _selectedPriority    = 'Medium';
-  DateTime _dueDateTime        = DateTime.now().add(const Duration(days: 7));
+  String   _selectedPriority     = 'Medium';
+  DateTime _dueDateTime          = DateTime.now().add(const Duration(days: 7));
 
   static const List<String> _priorityOptions = ['High', 'Medium', 'Low'];
 
@@ -336,20 +424,38 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     });
   }
 
+  // Parses "2h", "30m", "1h 30m" into a numeric hour value for the progress bar
+  double _parseEstimatedHours(String input) {
+    final trimmed = input.trim().toLowerCase();
+    if (trimmed.isEmpty) return 0;
+    double total = 0;
+    // Match hours — e.g. "2h" or "1h"
+    final hoursMatch = RegExp(r'(\d+(\.\d+)?)h').firstMatch(trimmed);
+    if (hoursMatch != null) total += double.parse(hoursMatch.group(1)!);
+    // Match minutes — e.g. "30m"
+    final minsMatch = RegExp(r'(\d+)m').firstMatch(trimmed);
+    if (minsMatch != null) total += int.parse(minsMatch.group(1)!) / 60;
+    return total;
+  }
+
   // Validates and creates the task
   void _submit() {
     if (_titleController.text.trim().isEmpty) return; // title is required
 
+    final estText  = _estimatedTimeController.text.trim();
+    final estHours = _parseEstimatedHours(estText);
+
     final newTask = ProductTask(
-      title:       _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      dueDate:     _formatDate(_dueDateTime),
-      dueTime:     _formatTime(_dueDateTime),
-      status:      'To Do',
-      priority:    _selectedPriority,
-      progress:    0.0,
-      estimatedTime: _estimatedTimeController.text.trim(),
-      checklist:   [], // empty checklist on creation
+      title:          _titleController.text.trim(),
+      description:    _descriptionController.text.trim(),
+      dueDate:        _formatDate(_dueDateTime),
+      dueTime:        _formatTime(_dueDateTime),
+      status:         'To Do',
+      priority:       _selectedPriority,
+      progress:       0.0,
+      estimatedTime:  estText,    // human-readable string shown as chip
+      estimatedHours: estHours,   // numeric value used for the progress bar
+      checklist:      [],
     );
 
     widget.onCreated(newTask); // pass back to the page
@@ -481,19 +587,17 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Estimated time
+            // ── Estimated time ──
             _fieldLabel('Estimated Time'),
             const SizedBox(height: 4),
-            Text(
-              'e.g. 30m, 2h, 1h 30m',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
-            ),
+            Text('e.g. 30m, 2h, 1h 30m',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
             const SizedBox(height: 8),
             _textField(
               controller: _estimatedTimeController,
               hint: 'e.g. 2h',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
             // ── Create button ──
             SizedBox(
