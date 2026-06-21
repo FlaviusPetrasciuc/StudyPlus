@@ -7,14 +7,8 @@ import '../../widgets/menu_button.dart';
 import '../../widgets/navigation_drawer.dart';
 
 class ProductTaskPage extends StatefulWidget {
-  // The project whose tasks this page displays. Title, member count,
-  // and the task list itself all come from this project now instead
-  // of being hard-coded or pulled from the old global fakeProductTasks list.
   final Project project;
 
-  // Optional — lets callers (like the navigation drawer) deep-link
-  // straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
-  // Defaults to 1 (Tasks) if not provided.
   final int initialTab;
 
   const ProductTaskPage({
@@ -105,13 +99,12 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                       color: Colors.black87),
                 ),
                 const SizedBox(height: 2),
-                Text('${widget.project.totalTasks} tasks · ${widget.project.memberCount} members',
+                Text('${widget.project.memberCount} members',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
               ],
             ),
           ),
-          // Builder gives MenuButton a context that's guaranteed to sit
-          // below the Scaffold, so Scaffold.of(context) can find it
+          // Builder gives MenuButton context
           Builder(
             builder: (context) => MenuButton(
               onPressed: () => Scaffold.of(context).openEndDrawer(),
@@ -162,8 +155,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  // Tab tap just switches which content shows below the header/tab bar —
-  // no navigation, no separate pages, no duplicate headers.
+  // Switch between tabs
   void _handleTabTap(int index) {
     setState(() => _selectedTab = index);
   }
@@ -191,8 +183,6 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   }
 
   // ── Overview tab content — same cards as ProjectOverviewScreen's
-  // Overview tab, rebuilt here so it renders under our shared header
-  // instead of that screen's own separate header.
   Widget _buildOverviewTab() {
     final project      = widget.project;
     final totalHours   = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
@@ -331,8 +321,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  // ── Analytics tab content — AnalyticsDashboard itself has no header
-  // of its own, so it drops in directly under our shared header/tab bar.
+  // ── Analytics tab content —
   Widget _buildAnalyticsTab() {
     final project     = widget.project;
     final total       = project.totalTasks;
@@ -396,11 +385,8 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
 }
 
 // ── Create Task Bottom Sheet ──────────────────────────────────────
-// A self-contained widget so its own setState doesn't rebuild the whole page
 class _CreateTaskSheet extends StatefulWidget {
   final ValueChanged<ProductTask> onCreated;
-  // Groups belonging to the project this task is being created in —
-  // lets the user pick an existing group instead of only creating new ones
   final List<TaskGroup> groups;
 
   const _CreateTaskSheet({required this.onCreated, required this.groups});
