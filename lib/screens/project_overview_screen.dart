@@ -284,28 +284,6 @@ class _ProjectOverviewScreenState extends State<ProjectOverviewScreen>
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                project.timelineStart,
-                style: const TextStyle(
-                  fontSize: 12.0,
-                  color: Colors.black45,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                project.timelineEnd,
-                style: const TextStyle(
-                  fontSize: 12.0,
-                  color: Colors.black45,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(100),
             child: LinearProgressIndicator(

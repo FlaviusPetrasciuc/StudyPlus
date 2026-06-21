@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
-import '../auth/auth_service.dart';
-import '../screens/login_screen.dart';
-import '../screens/invite_team_members_screen.dart';
-import '../screens/create_project_screen.dart';
-import '../screens/project_calendar_screen.dart';
-import '../screens/project_details.dart';
-import '../pages/productTaskPage/product_task_page.dart';
-import '../pages/createProjectPage/models/project_store.dart';
-import '../screens/my_account_screen.dart';
+import 'package:study_plus/auth/auth_service.dart';
+import 'package:study_plus/screens/login_screen.dart';
+import 'package:study_plus/screens/invite_team_members_screen.dart';
+import 'package:study_plus/screens/create_project_screen.dart';
+import 'package:study_plus/screens/project_calendar_screen.dart';
+import 'package:study_plus/pages/productTaskPage/product_task_page.dart';
+import 'package:study_plus/pages/createProjectPage/models/project_store.dart';
+import 'package:study_plus/screens/my_account_screen.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -25,6 +24,22 @@ class CustomNavigationDrawer extends StatelessWidget {
         MaterialPageRoute(builder: (context) => screen),
       );
     }
+  }
+
+  Widget _latestProjectPage({
+    required int tab,
+    required Widget fallback,
+  }) {
+    final projects = ProjectStore.instance.projects;
+
+    if (projects.isEmpty) {
+      return fallback;
+    }
+
+    return ProductTaskPage(
+      project: projects.last,
+      initialTab: tab,
+    );
   }
 
   @override
@@ -84,20 +99,19 @@ class CustomNavigationDrawer extends StatelessWidget {
             _buildSectionTitle('MAIN'),
 
             _buildMenuItem(
-                context,
-                'Dashboard',
-                onTap: () {
-                  Navigator.pop(context); // close the drawer first
-                  // Safe to push fresh — CreateProjectPage reads from ProjectStore, never loses data
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CreateProjectPage(),
-                      settings: const RouteSettings(name: 'CreateProjectPage'),
-                    ),
-                        (route) => false,
-                  );
-                }
+              context,
+              'Dashboard',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CreateProjectPage(),
+                    settings: const RouteSettings(name: 'CreateProjectPage'),
+                  ),
+                      (route) => false,
+                );
+              },
             ),
 
             _buildMenuItem(context, 'My Account'),
@@ -126,15 +140,54 @@ class CustomNavigationDrawer extends StatelessWidget {
               },
             ),
 
-
             const SizedBox(height: 30),
 
             _buildSectionTitle('TEAM'),
 
-            _buildMenuItem(context, 'Team Dashboard'),
-            _buildMenuItem(context, 'Team Analytics'),
-            _buildMenuItem(context, 'Activity Feed'),
-            _buildMenuItem(context, 'Task Assignment'),
+            _buildMenuItem(
+              context,
+              'Team Dashboard',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'Team Dashboard',
+                  _latestProjectPage(
+                    tab: 0,
+                    fallback: const CreateProjectScreen(),
+                  ),
+                );
+              },
+            ),
+
+            _buildMenuItem(
+              context,
+              'Activity Feed',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'Activity Feed',
+                  _latestProjectPage(
+                    tab: 1,
+                    fallback: const CreateProjectScreen(),
+                  ),
+                );
+              },
+            ),
+
+            _buildMenuItem(
+              context,
+              'Team Analytics',
+              onTap: () {
+                _navigateTo(
+                  context,
+                  'Team Analytics',
+                  _latestProjectPage(
+                    tab: 2,
+                    fallback: const CreateProjectScreen(),
+                  ),
+                );
+              },
+            ),
 
             _buildMenuItem(
               context,
@@ -251,16 +304,7 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             Widget? nextPage;
 
-            if (title == 'Team Analytics') {
-              final projects = ProjectStore.instance.projects;
-              if (projects.isEmpty) {
-                // No project generated yet — send to create flow instead
-                nextPage = const CreateProjectScreen();
-              } else {
-                // Most recently added project (last in the list)
-                nextPage = ProductTaskPage(project: projects.last, initialTab: 2);
-              }
-            } else if (title == 'My Account') {
+            if (title == 'My Account') {
               nextPage = const MyAccountScreen();
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
@@ -268,8 +312,6 @@ class CustomNavigationDrawer extends StatelessWidget {
               nextPage = const ProjectCalendarScreen();
             } else if (title == 'Team Invite') {
               nextPage = const InviteTeamMembersScreen();
-            } else if (title == 'Project Details') {
-              nextPage = const ProjectDetails(initialTabIndex: 0);
             }
 
             if (nextPage == null) {
