@@ -92,12 +92,6 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          // Back arrow returns to the Projects page
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: Colors.black87, size: 22),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,24 +290,6 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Team Members card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Team Members',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
-                Text('Invite',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.blue.shade600)),
-              ],
-            ),
-          ),
         ],
       ),
     );
