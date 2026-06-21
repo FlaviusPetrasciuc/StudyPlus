@@ -30,6 +30,9 @@ class Project {
   // Total tasks in the project
   int get totalTasks => tasks.length;
 
+  // Total hours logged across all tasks
+  double get totalSpentHours => tasks.fold(0, (sum, t) => sum + t.spentHours);
+
   // 0.0 to 1.0 — used by the progress bar on the project card
   double get progress {
     if (totalTasks == 0) return 0;

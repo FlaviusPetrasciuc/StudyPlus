@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../auth/auth_service.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
-import '../services/task_service.dart';
+import '../pages/createProjectPage/models/project_store.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -13,7 +13,6 @@ class MyAccountScreen extends StatefulWidget {
 
 class _MyAccountScreenState extends State<MyAccountScreen> {
   final AuthService _authService = AuthService();
-  final TaskService _taskService = TaskService();
   final _passwordController = TextEditingController();
   bool _isChangingPassword = false;
 
@@ -55,6 +54,17 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final email = _authService.getCurrentUserEmail() ?? 'User Email';
+    final projects = ProjectStore.instance.projects;
+    
+    // Stats are based on the latest project to satisfy the "reset" requirement
+    double hoursLogged = 0;
+    int tasksCompleted = 0;
+    
+    if (projects.isNotEmpty) {
+      final latestProject = projects.last;
+      hoursLogged = latestProject.totalSpentHours;
+      tasksCompleted = latestProject.tasksDone;
+    }
     
     return Scaffold(
       backgroundColor: const Color(0xFFF4F5FA),
@@ -141,25 +151,17 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      'Assigned',
-                      '${_taskService.totalCount}',
+                      'Hours Logged',
+                      hoursLogged.toStringAsFixed(1),
                       const Color(0xFF007AFF),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      'Completed',
-                      '${_taskService.completedCount}',
+                      'Tasks Completed',
+                      '$tasksCompleted',
                       const Color(0xFF4CAF50),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Rate',
-                      '${_taskService.completionRate.toInt()}%',
-                      const Color(0xFFFF9800),
                     ),
                   ),
                 ],
@@ -178,9 +180,19 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // for now the projects are hardcoded, but will be dynamic
-              _buildProjectItem('Product Launch Q2 2026', 'Lead Designer'),
-              _buildProjectItem('StudyPlus Backend', 'Contributor'),
+              
+              if (projects.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'No projects found',
+                      style: TextStyle(color: Color(0xFF6C7278)),
+                    ),
+                  ),
+                )
+              else
+                ...projects.map((project) => _buildProjectItem(project.title, 'Project Member')).toList(),
 
               const SizedBox(height: 32),
 

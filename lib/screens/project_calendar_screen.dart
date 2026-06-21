@@ -6,8 +6,6 @@ import '../models/project_plan.dart';
 import '../utils/supabase_debug.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
-import '../pages/createProjectPage/models/project.dart';
-import '../pages/createProjectPage/models/project_store.dart';
 import 'create_project_screen.dart';
 import 'invite_team_members_screen.dart';
 
@@ -40,18 +38,9 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
     if (widget.projectPlan != null) {
       loadedProjectPlan = widget.projectPlan;
       isLoading = false;
-      _addPlanToStore(widget.projectPlan!);
     } else {
       loadLatestProjectFromSupabase();
     }
-  }
-
-  // Converts the plan into a Project and adds it to ProjectStore so it
-  // shows up on Dashboard automatically. ProjectStore itself skips adding
-  // if this plan's id is already present, so this is safe to call every
-  // time the screen builds, even across repeated navigation.
-  void _addPlanToStore(ProjectPlan plan) {
-    ProjectStore.instance.addProject(Project.fromProjectPlan(plan));
   }
 
   Future<void> loadLatestProjectFromSupabase() async {
@@ -128,7 +117,6 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
         isLoading = false;
       });
 
-      _addPlanToStore(plan); // also sync Supabase-loaded plans into ProjectStore
     } catch (e, stackTrace) {
       logSupabaseError('load latest project calendar', e, stackTrace);
 

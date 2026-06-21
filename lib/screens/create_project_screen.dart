@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../services/ai_plan_service.dart';
-import '../services/task_service.dart';
-import '../services/project_service.dart';
-import '../widgets/ai_loading_screen.dart';
-import '../widgets/menu_button.dart';
-import '../widgets/navigation_drawer.dart';
-import 'project_calendar_screen.dart';
+import 'package:study_plus/services/ai_plan_service.dart';
+import 'package:study_plus/services/project_service.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
+import 'package:study_plus/pages/createProjectPage/models/project_store.dart';
+import 'package:study_plus/pages/createProjectPage/models/project.dart';
+import 'package:study_plus/widgets/ai_loading_screen.dart';
+import 'package:study_plus/widgets/menu_button.dart';
+import 'package:study_plus/widgets/navigation_drawer.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -62,6 +63,25 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   }
 
   Future<void> generateAiPlan() async {
+    final existingProjects = ProjectStore.instance.projects;
+
+    if (existingProjects.isNotEmpty) {
+      setState(() {
+        errorMessage =
+        'You already have one AI-generated project. Delete the previous project before creating a new one.';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Delete the previous project before generating a new one.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     if (!validateInput()) return;
 
     Navigator.push(
@@ -81,11 +101,17 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
       Navigator.pop(context);
 
-      Navigator.pushReplacement(
+      final project = Project.fromProjectPlan(projectPlan);
+
+      ProjectStore.instance.addProject(project);
+      ProjectService().addProject(projectPlan);
+
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => ProjectCalendarScreen(projectPlan: projectPlan),
+          builder: (context) => const CreateProjectPage(),
         ),
+            (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
@@ -121,9 +147,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   },
                 ),
               ),
-
               const SizedBox(height: 28),
-
               const Text(
                 'Create New Project',
                 style: TextStyle(
@@ -132,9 +156,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   color: Color(0xFF202124),
                 ),
               ),
-
               const SizedBox(height: 10),
-
               const Text(
                 'Provide your project details and let AI create a\nstructured 8-week plan',
                 style: TextStyle(
@@ -143,9 +165,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   color: Color(0xFF8E8E93),
                 ),
               ),
-
               const SizedBox(height: 36),
-
               _InputCard(
                 title: 'Project Name',
                 child: TextField(
@@ -155,9 +175,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 28),
-
               _InputCard(
                 title: 'Project Details',
                 child: Column(
@@ -167,7 +185,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       controller: projectDetailsController,
                       maxLines: 10,
                       decoration: _inputDecoration(
-                        hintText: 'Paste or input all available project information',
+                        hintText:
+                        'Paste or input all available project information',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -182,9 +201,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
               if (errorMessage != null)
                 Text(
                   errorMessage!,
@@ -194,9 +211,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
               const SizedBox(height: 20),
-
               SizedBox(
                 width: double.infinity,
                 height: 68,

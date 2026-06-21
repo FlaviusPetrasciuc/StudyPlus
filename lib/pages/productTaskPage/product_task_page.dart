@@ -253,36 +253,35 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Timeline',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Start',
-                        style: TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500)),
-                    Text(
-                      project.deadline != null
-                          ? '${project.deadline!.day}/${project.deadline!.month}'
-                          : 'No deadline',
-                      style: const TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500),
-                    ),
-                  ],
+                const Text(
+                  'Timeline',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(100),
                   child: LinearProgressIndicator(
                     value: project.progress,
                     backgroundColor: const Color(0xFFEEEFF4),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2979FF)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF2979FF),
+                    ),
                     minHeight: 8,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Center(
-                  child: Text('$progressPct% complete',
-                      style: const TextStyle(fontSize: 12, color: Colors.black45)),
+                  child: Text(
+                    '$progressPct% complete',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black45,
+                    ),
+                  ),
                 ),
               ],
             ),
