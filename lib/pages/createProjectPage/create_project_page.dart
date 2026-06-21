@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'widgets/project_card.dart';
-import 'models/project.dart';
 import 'models/project_store.dart';
 import '../../widgets/navigation_drawer.dart';
 import '../../widgets/menu_button.dart';
+import '../../screens/create_project_screen.dart';
 
 class CreateProjectPage extends StatefulWidget {
   const CreateProjectPage({super.key});
@@ -28,130 +28,6 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
   }
 
   void _onStoreChanged() => setState(() {});
-
-  // ── "Create New Project" popup ───────────────────────────────────────────
-  void _showCreateDialog() {
-    final TextEditingController nameController = TextEditingController();
-    DateTime? selectedDate; // holds the picked date
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        // StatefulBuilder lets the dialog rebuild when the date changes
-        // without rebuilding the whole page
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: const Text(
-                "New Project",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min, // dialog only as tall as needed
-                children: [
-
-                  // Project name field
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      hintText: "Project name",
-                      filled: true,
-                      fillColor: const Color(0xFFF2F4F7),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Date picker row
-                  GestureDetector(
-                    onTap: () async {
-                      // Opens the system calendar popup
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate:
-                        DateTime.now().add(const Duration(days: 14)),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now()
-                            .add(const Duration(days: 365 * 2)),
-                      );
-                      if (picked != null) {
-                        // Update dialog UI to show chosen date
-                        setDialogState(() => selectedDate = picked);
-                      }
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF2F4F7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.calendar_today,
-                              size: 16, color: Colors.grey),
-                          const SizedBox(width: 10),
-                          Text(
-                            selectedDate != null
-                                ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"
-                                : "Pick a deadline",
-                            style: TextStyle(
-                              color: selectedDate != null
-                                  ? Colors.black
-                                  : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context), // cancel
-                  child: const Text("Cancel",
-                      style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final name = nameController.text.trim();
-                    if (name.isEmpty) return; // don't create nameless projects
-
-                    // ProjectStore.fromAIGenerated() is the AI integration point
-                    ProjectStore.instance.addProject(Project(
-                      title: name,
-                      deadline: selectedDate,
-                      tasks: [],
-                      groups: [],
-                    ));
-
-                    Navigator.pop(context); // close dialog
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text("Create",
-                      style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +81,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                   if (ProjectStore.instance.projects.isEmpty)
                     SizedBox(
                       // roughly: screen height minus header, app bar, and button area
-                      height: MediaQuery.of(context).size.height - 320,
+                      height: (MediaQuery.of(context).size.height - 320).clamp(0, double.infinity),
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -241,7 +117,12 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
               child: SizedBox(
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: _showCreateDialog,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreateProjectScreen()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
