@@ -10,7 +10,15 @@ class ProjectStore extends ChangeNotifier {
 
   List<Project> get projects => List.unmodifiable(_projects);
 
+  // True if a project with this planId already exists, prevents duplicates
+  // across navigation since ProjectStore itself persists app-wide
+  bool hasPlan(String? planId) {
+    if (planId == null) return false;
+    return _projects.any((p) => p.planId == planId);
+  }
+
   void addProject(Project project) {
+    if (project.planId != null && hasPlan(project.planId)) return; // already added
     _projects.add(project);
     notifyListeners();
   }

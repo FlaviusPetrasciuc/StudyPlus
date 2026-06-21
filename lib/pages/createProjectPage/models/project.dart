@@ -7,6 +7,7 @@ class Project {
   final DateTime? deadline; // nullable — new projects start with no deadline
   final List<ProductTask> tasks; // real ProductTask objects, not TaskItem
   final int memberCount; // placeholder until real team membership is tracked
+  final String? planId; // matches ProjectPlan.id, used to prevent duplicate adds
 
   // Groups available within this project, populated by the AI or the user
   final List<TaskGroup> groups;
@@ -15,6 +16,7 @@ class Project {
     required this.title,
     this.deadline,
     this.memberCount = 1,
+    this.planId,
     List<ProductTask>? tasks,
     List<TaskGroup>? groups,
   })  : tasks = tasks ?? [],
@@ -130,6 +132,7 @@ class Project {
     return Project(
       title: projectPlan.title as String,
       deadline: startDate.add(const Duration(days: 56)), // 8 weeks
+      planId: projectPlan.id as String?,
       tasks: tasks,
       groups: groups.values.toList(),
     );

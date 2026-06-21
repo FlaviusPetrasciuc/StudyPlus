@@ -30,7 +30,6 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
   bool isLoading = true;
   String? errorMessage;
   ProjectPlan? loadedProjectPlan;
-  bool _addedToStore = false; // prevents adding the same plan twice on rebuild
 
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
@@ -47,10 +46,11 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
     }
   }
 
-  // Converts the plan to show up on Dashboard automatically
+  // Converts the plan into a Project and adds it to ProjectStore so it
+  // shows up on Dashboard automatically. ProjectStore itself skips adding
+  // if this plan's id is already present, so this is safe to call every
+  // time the screen builds, even across repeated navigation.
   void _addPlanToStore(ProjectPlan plan) {
-    if (_addedToStore) return;
-    _addedToStore = true;
     ProjectStore.instance.addProject(Project.fromProjectPlan(plan));
   }
 
