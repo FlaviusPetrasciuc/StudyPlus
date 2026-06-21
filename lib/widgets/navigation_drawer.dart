@@ -148,12 +148,26 @@ class CustomNavigationDrawer extends StatelessWidget {
               context,
               'Team Dashboard',
               onTap: () {
-                _navigateTo(
+                final projects = ProjectStore.instance.projects;
+
+                if (projects.isEmpty) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No active project found. Generate a project first.'),
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.pop(context);
+                Navigator.push(
                   context,
-                  'Team Dashboard',
-                  _latestProjectPage(
-                    tab: 0,
-                    fallback: const CreateProjectScreen(),
+                  MaterialPageRoute(
+                    builder: (_) => ProductTaskPage(
+                      project: projects.last,
+                      initialTab: 0,
+                    ),
                   ),
                 );
               },
@@ -163,12 +177,26 @@ class CustomNavigationDrawer extends StatelessWidget {
               context,
               'Activity Feed',
               onTap: () {
-                _navigateTo(
+                final projects = ProjectStore.instance.projects;
+
+                if (projects.isEmpty) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No active project found. Generate a project first.'),
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.pop(context);
+                Navigator.push(
                   context,
-                  'Activity Feed',
-                  _latestProjectPage(
-                    tab: 1,
-                    fallback: const CreateProjectScreen(),
+                  MaterialPageRoute(
+                    builder: (_) => ProductTaskPage(
+                      project: projects.last,
+                      initialTab: 1,
+                    ),
                   ),
                 );
               },
@@ -178,25 +206,27 @@ class CustomNavigationDrawer extends StatelessWidget {
               context,
               'Team Analytics',
               onTap: () {
-                _navigateTo(
-                  context,
-                  'Team Analytics',
-                  _latestProjectPage(
-                    tab: 2,
-                    fallback: const CreateProjectScreen(),
-                  ),
-                );
-              },
-            ),
+                final projects = ProjectStore.instance.projects;
 
-            _buildMenuItem(
-              context,
-              'Team Invite',
-              onTap: () {
-                _navigateTo(
+                if (projects.isEmpty) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No active project found. Generate a project first.'),
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.pop(context);
+                Navigator.push(
                   context,
-                  'Team Invite',
-                  const InviteTeamMembersScreen(),
+                  MaterialPageRoute(
+                    builder: (_) => ProductTaskPage(
+                      project: projects.last,
+                      initialTab: 2,
+                    ),
+                  ),
                 );
               },
             ),

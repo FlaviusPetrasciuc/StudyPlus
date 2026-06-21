@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:study_plus/pages/createProjectPage/models/project.dart';
+import 'package:study_plus/pages/createProjectPage/models/project_store.dart';
 import 'package:study_plus/pages/productTaskPage/product_task_page.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 
 class ProjectCard extends StatelessWidget {
   final Project project;
-
-  // Called when a task is toggled inside the detail page —
-  // bubbles the setState back up to CreateProjectPage so the card refreshes
   final VoidCallback onUpdate;
 
   const ProjectCard({
@@ -15,24 +15,59 @@ class ProjectCard extends StatelessWidget {
     required this.onUpdate,
   });
 
+  Future<void> _deleteProject(BuildContext context) async {
+    final supabase = Supabase.instance.client;
+    final projectId = project.planId;
+
+    if (projectId == null) {
+      ProjectStore.instance.removeProject(project);
+      onUpdate();
+      return;
+    }
+
+    try {
+      await supabase.from('tasks').delete().eq('project_id', projectId);
+
+      await supabase.from('projects').delete().eq('id', projectId);
+
+      ProjectStore.instance.removeProject(project);
+      onUpdate();
+
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const CreateProjectPage(),
+          ),
+              (route) => false,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Project deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete project: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final int progressPercent = (project.progress * 100).round();
 
-    // GestureDetector makes the whole card tappable
     return GestureDetector(
       onTap: () async {
-        // Navigate to the full task list page, scoped to this project.
-        // This reuses the exact same Tasks-tab UI (cards, status badges,
-        // overdue dates, groups) that the Product Launch page uses.
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ProductTaskPage(project: project),
           ),
         );
-        // When user comes back, tell the parent to rebuild
-        // so progress bar reflects any changes made
+
         onUpdate();
       },
       child: Container(
@@ -52,19 +87,56 @@ class ProjectCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // ── Title ──────────────────────────────────────────────
-            Text(
-              project.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            // Title + delete button
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    project.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('Delete Project'),
+                        content: const Text(
+                          'Are you sure you want to delete this project? This will also delete it from Supabase.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              Navigator.pop(dialogContext);
+                              await _deleteProject(context);
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
 
             const SizedBox(height: 14),
 
-            // ── Progress label + percentage ────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -84,13 +156,10 @@ class ProjectCard extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            // ── Progress bar ───────────────────────────────────────
-            // Same calculation as before — now driven by ProductTask
-            // statuses via project.progress under the hood
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: project.progress, // dynamic — 0.0 to 1.0
+                value: project.progress,
                 backgroundColor: Colors.grey.shade200,
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                 minHeight: 7,
@@ -99,7 +168,6 @@ class ProjectCard extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            // ── Tasks count + Days left ────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -140,9 +208,6 @@ class ProjectCard extends StatelessWidget {
               ],
             ),
 
-            // ── Group chips — only shown if the project has groups ──
-            // Gives a quick visual preview of which teams/areas this
-            // project touches, straight from the AI-generated groups
             if (project.groups.isNotEmpty) ...[
               const SizedBox(height: 14),
               Wrap(
@@ -151,7 +216,9 @@ class ProjectCard extends StatelessWidget {
                 children: project.groups.map((g) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: g.color.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -160,16 +227,22 @@ class ProjectCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 6, height: 6,
+                          width: 6,
+                          height: 6,
                           decoration: BoxDecoration(
-                              color: g.color, shape: BoxShape.circle),
+                            color: g.color,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                         const SizedBox(width: 4),
-                        Text(g.name,
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: g.color)),
+                        Text(
+                          g.name,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: g.color,
+                          ),
+                        ),
                       ],
                     ),
                   );
