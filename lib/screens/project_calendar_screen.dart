@@ -6,6 +6,8 @@ import '../models/project_plan.dart';
 import '../utils/supabase_debug.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
+import '../pages/createProjectPage/models/project.dart';
+import '../pages/createProjectPage/models/project_store.dart';
 import 'create_project_screen.dart';
 import 'invite_team_members_screen.dart';
 
@@ -28,6 +30,7 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
   bool isLoading = true;
   String? errorMessage;
   ProjectPlan? loadedProjectPlan;
+  bool _addedToStore = false; // prevents adding the same plan twice on rebuild
 
   final List<String> days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
@@ -38,9 +41,17 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
     if (widget.projectPlan != null) {
       loadedProjectPlan = widget.projectPlan;
       isLoading = false;
+      _addPlanToStore(widget.projectPlan!);
     } else {
       loadLatestProjectFromSupabase();
     }
+  }
+
+  // Converts the plan to show up on Dashboard automatically
+  void _addPlanToStore(ProjectPlan plan) {
+    if (_addedToStore) return;
+    _addedToStore = true;
+    ProjectStore.instance.addProject(Project.fromProjectPlan(plan));
   }
 
   Future<void> loadLatestProjectFromSupabase() async {
@@ -104,16 +115,20 @@ class _ProjectCalendarScreenState extends State<ProjectCalendarScreen> {
         );
       }).toList();
 
+      final plan = ProjectPlan(
+        id: projectId,
+        title: projectResponse['title'] ?? '',
+        details: projectResponse['details'] ?? '',
+        inviteCode: inviteCode,
+        tasks: tasks,
+      );
+
       setState(() {
-        loadedProjectPlan = ProjectPlan(
-          id: projectId,
-          title: projectResponse['title'] ?? '',
-          details: projectResponse['details'] ?? '',
-          inviteCode: inviteCode,
-          tasks: tasks,
-        );
+        loadedProjectPlan = plan;
         isLoading = false;
       });
+
+      _addPlanToStore(plan); // also sync Supabase-loaded plans into ProjectStore
     } catch (e, stackTrace) {
       logSupabaseError('load latest project calendar', e, stackTrace);
 
