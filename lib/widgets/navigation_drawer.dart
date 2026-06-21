@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
 import '../auth/auth_service.dart';
-import '../pages/createProjectPage/models/project.dart';
 import '../screens/login_screen.dart';
 import '../screens/invite_team_members_screen.dart';
 import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
 import '../screens/project_details.dart';
 import '../pages/productTaskPage/product_task_page.dart';
+import '../screens/my_account_screen.dart';
+import '../pages/createProjectPage/models/project.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -81,17 +83,19 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             _buildSectionTitle('MAIN'),
 
-            // 'Dashboard' now has an explicit onTap that pops back to the
-            // existing Projects page already in the stack — it no longer
-            // falls through to the sample-project fallback below.
             _buildMenuItem(
-              context,
-              'Dashboard',
+                context,
+                'Dashboard',
               onTap: () {
-                Navigator.pop(context); // close the drawer first
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
+                _navigateTo(
+                    context,
+                    "Dashboard",
+                    const CreateProjectPage(),
+                );
+              }
             ),
+
+            _buildMenuItem(context, 'My Account'),
 
             _buildMenuItem(
               context,
@@ -242,9 +246,12 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             Widget? nextPage;
 
-            // 'Dashboard' removed from here — it now has its own onTap above
-            if (title == 'Team Analytics') {
+            if (title == 'Dashboard') {
+              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
+            } else if (title == 'Team Analytics') {
               nextPage = ProductTaskPage(project: Project.sample(), initialTab: 2);
+            } else if (title == 'My Account') {
+              nextPage = const MyAccountScreen();
             } else if (title == 'New Project') {
               nextPage = const CreateProjectScreen();
             } else if (title == 'Calendar') {
