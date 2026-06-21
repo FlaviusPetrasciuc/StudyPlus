@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/ai_plan_service.dart';
-import '../services/task_service.dart';
-import '../services/project_service.dart';
+import '../pages/createProjectPage/models/project_store.dart';
+import '../pages/createProjectPage/models/project.dart';
 import '../widgets/ai_loading_screen.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
@@ -80,6 +80,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       if (!mounted) return;
 
       Navigator.pop(context);
+
+      // Convert ProjectPlan to Project and add to Store
+      final project = Project.fromProjectPlan(projectPlan);
+      ProjectStore.instance.addProject(project);
 
       Navigator.pushReplacement(
         context,
