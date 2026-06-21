@@ -111,7 +111,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                       color: Colors.black87),
                 ),
                 const SizedBox(height: 2),
-                Text('${widget.project.totalTasks} tasks',
+                Text('${widget.project.totalTasks} tasks · ${widget.project.memberCount} members',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
               ],
             ),

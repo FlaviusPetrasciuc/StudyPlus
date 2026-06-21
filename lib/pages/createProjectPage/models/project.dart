@@ -10,6 +10,7 @@ class Project {
   final String title;
   final DateTime? deadline; // nullable — new projects start with no deadline
   final List<ProductTask> tasks; // real ProductTask objects, not TaskItem
+  final int memberCount;
 
   // Groups available within this project (e.g. "Design", "Backend").
   // The AI can populate this list when it generates a project — each
@@ -19,6 +20,7 @@ class Project {
   Project({
     required this.title,
     this.deadline,
+    this.memberCount = 1,
     List<ProductTask>? tasks,
     List<TaskGroup>? groups,
   })  : tasks = tasks ?? [],
