@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/navigation_drawer.dart';
+import '../../widgets/menu_button.dart';
 import '../productTaskPage/models/product_task_module.dart';
 import 'widgets/project_card.dart';
 import 'models/project.dart';
@@ -234,21 +235,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                           ),
                         ],
                       ),
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.menu,
-                              color: Colors.white, size: 20),
-                          onPressed: () {
-                            // TODO: hook up drawer later
-                          },
-                        ),
-                      ),
+                      const MenuButton(),
                     ],
                   ),
 
