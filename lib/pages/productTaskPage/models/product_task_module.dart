@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// ── User-defined group ──────────────────────────────────────
+// User-defined group
 class TaskGroup {
   String name;
   Color color;
@@ -8,7 +8,7 @@ class TaskGroup {
   TaskGroup({required this.name, required this.color});
 }
 
-// ── Checklist item ───────────────────────────────────────────
+// Checklist item
 class ChecklistItem {
   String label;
   bool done;
@@ -16,8 +16,7 @@ class ChecklistItem {
   ChecklistItem({required this.label, this.done = false});
 }
 
-// ── Time log entry ───────────────────────────────────────────
-// Each time the user logs hours, one of these is created
+// Time log entry, created each time the user logs hours
 class TimeLog {
   double hours;   // mutable so the user can edit a log entry
   String notes;   // mutable so the user can edit a log entry
@@ -30,7 +29,7 @@ class TimeLog {
   });
 }
 
-// ── Main task model ──────────────────────────────────────────
+// Main task model
 class ProductTask {
   final String title;
   final String description;
@@ -82,99 +81,3 @@ class ProductTask {
   double get timeProgress =>
       estimatedHours <= 0 ? 0 : (spentHours / estimatedHours).clamp(0.0, 1.0);
 }
-
-// ── Seed data ────────────────────────────────────────────────
-final List<ProductTask> fakeProductTasks = [
-  ProductTask(
-    title: 'Market Research & Analysis',
-    description: 'Conduct comprehensive market research',
-    dueDate: 'Apr 5',
-    status: 'Done',
-    progress: 1.0,
-    estimatedTime: '',
-    checklist: [
-      ChecklistItem(label: 'Define target audience', done: true),
-      ChecklistItem(label: 'Competitor analysis',    done: true),
-      ChecklistItem(label: 'Summarise findings',     done: true),
-    ],
-  ),
-  ProductTask(
-    title: 'User Interface Design',
-    description: 'Create wireframes and prototypes',
-    dueDate: 'Apr 12',
-    status: 'Done',
-    progress: 1.0,
-    estimatedTime: '',
-    checklist: [
-      ChecklistItem(label: 'Sketch low-fi wireframes', done: true),
-      ChecklistItem(label: 'Build hi-fi prototype',    done: true),
-    ],
-  ),
-  ProductTask(
-    title: 'Backend Development',
-    description: 'Set up API endpoints and database',
-    dueDate: 'May 1',
-    status: 'In Progress',
-    progress: 0.5,
-    estimatedTime: '8h',
-    estimatedHours: 8,
-    spentHours: 4,
-    checklist: [
-      ChecklistItem(label: 'Design database schema', done: true),
-      ChecklistItem(label: 'Create REST endpoints',  done: true),
-      ChecklistItem(label: 'Write unit tests',       done: false),
-      ChecklistItem(label: 'Deploy to staging',      done: false),
-    ],
-  ),
-  ProductTask(
-    title: 'Content Strategy',
-    description: 'Develop content plan and guidelines',
-    dueDate: 'Apr 28',
-    status: 'In Progress',
-    progress: 0.33,
-    estimatedTime: '',
-    checklist: [
-      ChecklistItem(label: 'Content audit',          done: true),
-      ChecklistItem(label: 'Editorial calendar',     done: false),
-      ChecklistItem(label: 'Brand voice guidelines', done: false),
-    ],
-  ),
-  ProductTask(
-    title: 'Testing & QA',
-    description: 'Comprehensive testing across platforms',
-    dueDate: 'May 10',
-    status: 'To Do',
-    progress: 0.0,
-    estimatedTime: '',
-    checklist: [
-      ChecklistItem(label: 'Write test cases'),
-      ChecklistItem(label: 'Run regression tests'),
-      ChecklistItem(label: 'Bug triage'),
-    ],
-  ),
-  ProductTask(
-    title: 'Documentation',
-    description: 'Create user guides and technical docs',
-    dueDate: 'May 15',
-    status: 'To Do',
-    progress: 0.0,
-    estimatedTime: '',
-    checklist: [
-      ChecklistItem(label: 'API reference docs'),
-      ChecklistItem(label: 'User onboarding guide'),
-    ],
-  ),
-  ProductTask(
-    title: 'Launch Preparation',
-    description: 'Final checks and deployment setup',
-    dueDate: 'May 20',
-    status: 'To Do',
-    progress: 0.0,
-    estimatedTime: '',
-    checklist: [
-      ChecklistItem(label: 'Smoke test on production'),
-      ChecklistItem(label: 'Set up monitoring alerts'),
-      ChecklistItem(label: 'Notify stakeholders'),
-    ],
-  ),
-];

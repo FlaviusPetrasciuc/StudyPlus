@@ -5,8 +5,14 @@ import '../product_task_detail_page.dart';
 class ProductTaskCard extends StatelessWidget {
   final ProductTask task;
   final VoidCallback onUpdate;
+  final VoidCallback onDelete;
 
-  const ProductTaskCard({super.key, required this.task, required this.onUpdate});
+  const ProductTaskCard({
+    super.key,
+    required this.task,
+    required this.onUpdate,
+    required this.onDelete,
+  });
 
   // Badge background colour based on status string
   Color _statusBg(String s) {
@@ -77,6 +83,74 @@ class ProductTaskCard extends StatelessWidget {
     return parts.join(' ');
   }
 
+  // Shows a confirmation dialog that drops down from the top
+  void _confirmDelete(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Delete task',
+      barrierColor: Colors.black.withOpacity(0.4),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+      transitionBuilder: (dialogContext, animation, _, child) {
+        final offset = Tween<Offset>(
+          begin: const Offset(0, -1),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut));
+
+        return Align(
+          alignment: Alignment.topCenter,
+          child: SlideTransition(
+            position: offset,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Material(
+                  color: Colors.white, // explicit white, no Material 3 tint
+                  borderRadius: BorderRadius.circular(16),
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Delete task?',
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.black87)),
+                        const SizedBox(height: 8),
+                        Text('Are you sure you want to delete "${task.title}"?',
+                            style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+                            ),
+                            const SizedBox(width: 4),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(dialogContext);
+                                onDelete();
+                              },
+                              child: const Text('Delete',
+                                  style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w600)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final overdue = _isOverdue(task);
@@ -134,6 +208,11 @@ class ProductTaskCard extends StatelessWidget {
                       color: _statusFg(task.status),
                     ),
                   ),
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => _confirmDelete(context),
+                  child: Icon(Icons.delete_outline_rounded, size: 18, color: Colors.grey.shade400),
                 ),
               ],
             ),

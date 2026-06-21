@@ -130,17 +130,26 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
     final hoursController = TextEditingController();
     final notesController = TextEditingController();
     DateTime logDate      = DateTime.now();
+    String? hoursError;
 
-    // Parses friendly input like "2h", "30m", "15s", "1h 30m" into hours
+    // True if input matches a valid time format with h/m/s, spaces allowed
+    bool isValidLogTime(String input) {
+      final t = input.trim();
+      if (t.isEmpty) return false; // must log something
+      return RegExp(r'^(\d+(\.\d+)?\s?h)?\s*(\d+\s?m)?\s*(\d+\s?s)?$').hasMatch(t.toLowerCase())
+          && RegExp(r'\d').hasMatch(t); // must contain at least one digit
+    }
+
+    // Parses friendly input like "2h", "30m", "15s", "1h 30m", "2 h" into hours
     double parseFriendlyTime(String input) {
       final t = input.trim().toLowerCase();
       if (t.isEmpty) return 0;
       double total = 0;
-      final h = RegExp(r'(\d+(\.\d+)?)h').firstMatch(t);
+      final h = RegExp(r'(\d+(\.\d+)?)\s?h').firstMatch(t);
       if (h != null) total += double.parse(h.group(1)!);
-      final m = RegExp(r'(\d+)m').firstMatch(t);
+      final m = RegExp(r'(\d+)\s?m').firstMatch(t);
       if (m != null) total += int.parse(m.group(1)!) / 60;
-      final s = RegExp(r'(\d+)s').firstMatch(t);
+      final s = RegExp(r'(\d+)\s?s').firstMatch(t);
       if (s != null) total += int.parse(s.group(1)!) / 3600;
       return total;
     }
@@ -189,7 +198,14 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                   controller: hoursController,
                   keyboardType: TextInputType.text,
                   decoration: _inputDecor('e.g. 1h 30m'),
+                  onChanged: (_) {
+                    if (hoursError != null) setSheet(() => hoursError = null);
+                  },
                 ),
+                if (hoursError != null) ...[
+                  const SizedBox(height: 6),
+                  Text(hoursError!, style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444))),
+                ],
                 const SizedBox(height: 16),
 
                 // ── Date picker row ──
@@ -258,9 +274,12 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Parse friendly input e.g. "1h 30m" → 1.5 hours
-                      final hours = parseFriendlyTime(hoursController.text);
-                      if (hours <= 0) return; // must log at least some time
+                      final text = hoursController.text;
+                      if (!isValidLogTime(text)) {
+                        setSheet(() => hoursError = 'Use format like 2h, 30m, or 1h 30m');
+                        return;
+                      }
+                      final hours = parseFriendlyTime(text); // e.g. "1h 30m" → 1.5
 
                       final log = TimeLog(
                         hours: hours,
@@ -268,8 +287,7 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                         date:  logDate,
                       );
 
-                      // logTime() writes directly to widget.task — not a draft
-                      setState(() => widget.task.logTime(log));
+                      setState(() => widget.task.logTime(log)); // saves immediately, not a draft
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -416,8 +434,23 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
   // ── Edit Estimated Time sheet ─────────────────────────────────
   // Opens when user taps the Est. chip. Updates _draftEstimatedTime only —
   // written to widget.task when Save Changes is tapped.
+  // True if input is empty (allowed) or matches a valid time format
+  bool _isValidEstimatedTime(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return true; // empty is allowed
+    return RegExp(r'^(\d+(\.\d+)?\s?h)?\s*(\d+\s?m)?$').hasMatch(trimmed.toLowerCase())
+        && trimmed.toLowerCase() != 'h' && trimmed.toLowerCase() != 'm';
+  }
+
+  // Strips spaces between number and unit, e.g. "28 h" -> "28h"
+  String _normalizeTimeFormat(String input) {
+    return input.trim().toLowerCase().replaceAllMapped(
+        RegExp(r'(\d)\s+([hms])'), (m) => '${m[1]}${m[2]}');
+  }
+
   void _openEditEstimatedSheet() {
     final controller = TextEditingController(text: _draftEstimatedTime);
+    String? errorText;
 
     showModalBottomSheet(
       context: context,
@@ -425,84 +458,101 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 24, 20, MediaQuery.of(context).viewInsets.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Edit Estimated Time',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700,
-                    color: Colors.black87)),
-            const SizedBox(height: 20),
-            const Text('Estimated Time',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                    color: Color(0xFF374151))),
-            const SizedBox(height: 4),
-            Text('e.g. 2h, 30m, 1h 30m',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.text,
-              decoration: _inputDecor('e.g. 2h'),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Save into draft only — not widget.task yet
-                  setState(() => _draftEstimatedTime = controller.text.trim());
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              20, 24, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2)),
                 ),
-                child: const Text('Update',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              const Text('Edit Estimated Time',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700,
+                      color: Colors.black87)),
+              const SizedBox(height: 20),
+              const Text('Estimated Time',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151))),
+              const SizedBox(height: 4),
+              Text('e.g. 2h, 30m, 1h 30m',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.text,
+                decoration: _inputDecor('e.g. 2h'),
+                onChanged: (_) {
+                  if (errorText != null) setSheet(() => errorText = null);
+                },
+              ),
+              if (errorText != null) ...[
+                const SizedBox(height: 6),
+                Text(errorText!, style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444))),
+              ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final text = controller.text.trim();
+                    if (!_isValidEstimatedTime(text)) {
+                      setSheet(() => errorText = 'Use format like 2h, 30m, or 1h 30m');
+                      return;
+                    }
+                    setState(() => _draftEstimatedTime = _normalizeTimeFormat(text));
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Update',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Edit Log Entry sheet ──────────────────────────────────────
-  // Opens when user taps an existing log entry.
-  // Edits the log object directly since logs save immediately.
+  // Edit Log Entry sheet, edits hours/notes/date for an existing log
   void _openEditLogSheet(TimeLog log) {
-    // Pre-fill with the existing log values
     final hoursController = TextEditingController(text: _formatHours(log.hours));
     final notesController = TextEditingController(text: log.notes);
     DateTime logDate      = log.date;
+    String? hoursError;
 
-    // Reuse the same friendly time parser
+    bool isValidLogTime(String input) {
+      final t = input.trim();
+      if (t.isEmpty) return false;
+      return RegExp(r'^(\d+(\.\d+)?\s?h)?\s*(\d+\s?m)?\s*(\d+\s?s)?$').hasMatch(t.toLowerCase())
+          && RegExp(r'\d').hasMatch(t);
+    }
+
     double parseFriendlyTime(String input) {
       final t = input.trim().toLowerCase();
       if (t.isEmpty) return 0;
       double total = 0;
-      final h = RegExp(r'(\d+(\.\d+)?)h').firstMatch(t);
+      final h = RegExp(r'(\d+(\.\d+)?)\s?h').firstMatch(t);
       if (h != null) total += double.parse(h.group(1)!);
-      final m = RegExp(r'(\d+)m').firstMatch(t);
+      final m = RegExp(r'(\d+)\s?m').firstMatch(t);
       if (m != null) total += int.parse(m.group(1)!) / 60;
-      final s = RegExp(r'(\d+)s').firstMatch(t);
+      final s = RegExp(r'(\d+)\s?s').firstMatch(t);
       if (s != null) total += int.parse(s.group(1)!) / 3600;
       return total;
     }
@@ -548,7 +598,14 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                   controller: hoursController,
                   keyboardType: TextInputType.text,
                   decoration: _inputDecor('e.g. 1h 30m'),
+                  onChanged: (_) {
+                    if (hoursError != null) setSheet(() => hoursError = null);
+                  },
                 ),
+                if (hoursError != null) ...[
+                  const SizedBox(height: 6),
+                  Text(hoursError!, style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444))),
+                ],
                 const SizedBox(height: 16),
 
                 // ── Date picker ──
@@ -615,12 +672,15 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      final newHours = parseFriendlyTime(hoursController.text);
-                      if (newHours <= 0) return;
+                      final text = hoursController.text;
+                      if (!isValidLogTime(text)) {
+                        setSheet(() => hoursError = 'Use format like 2h, 30m, or 1h 30m');
+                        return;
+                      }
+                      final newHours = parseFriendlyTime(text);
 
                       setState(() {
-                        // Adjust spentHours: remove old, add new
-                        widget.task.spentHours -= log.hours;
+                        widget.task.spentHours -= log.hours; // remove old, add new
                         log.hours  = newHours;
                         log.notes  = notesController.text.trim();
                         log.date   = logDate;

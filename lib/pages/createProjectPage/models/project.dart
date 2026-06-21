@@ -1,32 +1,28 @@
 import 'package:flutter/material.dart';
 import '../../productTaskPage/models/product_task_module.dart';
 
-// ── Project ────────────────────────────────────────────────────────────────
-// A project now holds real ProductTask objects instead of the old
-// lightweight TaskItem. This means every project's tasks have full
-// status, priority, group, due date, and time tracking support —
-// the exact same system used on the Product Launch task page.
+// Project holds real ProductTask objects with full status/priority/group/time tracking support
 class Project {
   final String title;
   final DateTime? deadline; // nullable — new projects start with no deadline
   final List<ProductTask> tasks; // real ProductTask objects, not TaskItem
-  final int memberCount;
+  final int memberCount; // placeholder until real team membership is tracked
+  final String? planId; // matches ProjectPlan.id, used to prevent duplicate adds
 
-  // Groups available within this project (e.g. "Design", "Backend").
-  // The AI can populate this list when it generates a project — each
-  // task's `group` field should point to one of the TaskGroups here.
+  // Groups available within this project, populated by the AI or the user
   final List<TaskGroup> groups;
 
   Project({
     required this.title,
     this.deadline,
     this.memberCount = 1,
+    this.planId,
     List<ProductTask>? tasks,
     List<TaskGroup>? groups,
   })  : tasks = tasks ?? [],
         groups = groups ?? [];
 
-  // ── Computed getters (all dynamic — recalculated from the tasks list) ────
+  // Computed getters, all recalculated dynamically from the tasks list
 
   // How many tasks have status 'Done'
   int get tasksDone => tasks.where((t) => t.status == 'Done').length;
@@ -47,13 +43,7 @@ class Project {
     return diff < 0 ? 0 : diff; // clamp to 0 if deadline has passed
   }
 
-  // ── AI integration slot ───────────────────────────────────────────────
-  // Once the AI task-generation feature is built, call this factory with
-  // the AI's parsed output to build a Project in one step. Wire the AI's
-  // response into `groupNames` (e.g. ["Design", "Backend", "QA"]) and
-  // `taskData` (a list of maps with title/description/dueDate/groupName/etc).
-  // This keeps the AI integration to a single function call rather than
-  // touching every file that creates a Project.
+  // AI integration slot — builds a Project from generic title/group/task data
   factory Project.fromAIGenerated({
     required String title,
     DateTime? deadline,
@@ -96,67 +86,64 @@ class Project {
     );
   }
 
-  // ── Sample project for quick navigation ───────────────────────────────
-  // Used by entry points (like the navigation drawer) that need to open
-  // ProductTaskPage without a specific real project selected — e.g. a
-  // "Team Analytics" or "Dashboard" menu link. Has a mix of statuses,
-  // groups, and logged hours so Overview/Analytics have real data to show.
-  static Project sample() {
-    final design = TaskGroup(name: 'Design', color: const Color(0xFF6366F1));
-    final dev    = TaskGroup(name: 'Development', color: const Color(0xFF0EA5E9));
-    final qa     = TaskGroup(name: 'QA', color: const Color(0xFF10B981));
+  // Converts an AI-generated ProjectPlan (week/day/category tasks) into a Project
+  factory Project.fromProjectPlan(dynamic projectPlan) {
+    const palette = [
+      Color(0xFF6366F1), Color(0xFF0EA5E9), Color(0xFFF59E0B),
+      Color(0xFF10B981), Color(0xFFEC4899), Color(0xFF8B5CF6),
+    ];
+
+    // Build one TaskGroup per unique category, cycling through the palette
+    final categories = <String>{};
+    for (final task in projectPlan.tasks) {
+      categories.add(task.category as String);
+    }
+    final groups = <String, TaskGroup>{};
+    var i = 0;
+    for (final category in categories) {
+      groups[category] = TaskGroup(name: category, color: palette[i % palette.length]);
+      i++;
+    }
+
+    // Used as the base date — week 1 day 1 maps to this date
+    final startDate = DateTime.now();
+
+    final tasks = projectPlan.tasks.map<ProductTask>((task) {
+      // Each week is 7 days, each day index (1-5) offsets within that week
+      final dueDate = startDate.add(Duration(days: (task.week - 1) * 7 + (task.day - 1)));
+      const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final dueDateStr = '${monthNames[dueDate.month]} ${dueDate.day}';
+
+      return ProductTask(
+        title: task.title as String,
+        description: task.description as String,
+        dueDate: dueDateStr,
+        status: _statusFromGeneratedStatus(task.statusString as String),
+        priority: 'Medium',
+        progress: 0.0,
+        estimatedTime: '${task.estimatedHours}h',
+        estimatedHours: (task.estimatedHours as int).toDouble(),
+        group: groups[task.category as String],
+        checklist: [],
+      );
+    }).toList();
 
     return Project(
-      title: 'Sample Project Data',
-      deadline: DateTime.now().add(const Duration(days: 14)),
-      groups: [design, dev, qa],
-      tasks: [
-        ProductTask(
-          title: 'Wireframes',
-          description: 'Low-fi wireframes for core screens',
-          dueDate: 'Jun 20',
-          status: 'Done',
-          priority: 'Medium',
-          progress: 1.0,
-          group: design,
-          estimatedHours: 4,
-          spentHours: 4,
-          checklist: [],
-        ),
-        ProductTask(
-          title: 'API integration',
-          description: 'Connect frontend to backend endpoints',
-          dueDate: 'Jun 25',
-          status: 'In Progress',
-          priority: 'High',
-          progress: 0.0,
-          group: dev,
-          estimatedHours: 6,
-          spentHours: 3,
-          checklist: [],
-        ),
-        ProductTask(
-          title: 'Regression testing',
-          description: 'Full test pass before release',
-          dueDate: 'Jun 30',
-          status: 'To Do',
-          priority: 'Medium',
-          progress: 0.0,
-          group: qa,
-          estimatedHours: 5,
-          checklist: [],
-        ),
-        ProductTask(
-          title: 'Bug triage',
-          description: 'Review and prioritise open issues',
-          dueDate: 'Jul 2',
-          status: 'To Do',
-          priority: 'Low',
-          progress: 0.0,
-          group: qa,
-          checklist: [],
-        ),
-      ],
+      title: projectPlan.title as String,
+      deadline: startDate.add(const Duration(days: 56)), // 8 weeks
+      planId: projectPlan.id as String?,
+      tasks: tasks,
+      groups: groups.values.toList(),
     );
+  }
+
+  // Maps GeneratedTask's status string to ProductTask's status string
+  static String _statusFromGeneratedStatus(String status) {
+    switch (status) {
+      case 'completed':   return 'Done';
+      case 'in_progress': return 'In Progress';
+      default:            return 'To Do';
+    }
   }
 }

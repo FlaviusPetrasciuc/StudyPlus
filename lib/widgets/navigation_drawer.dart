@@ -7,8 +7,8 @@ import '../screens/create_project_screen.dart';
 import '../screens/project_calendar_screen.dart';
 import '../screens/project_details.dart';
 import '../pages/productTaskPage/product_task_page.dart';
+import '../pages/createProjectPage/models/project_store.dart';
 import '../screens/my_account_screen.dart';
-import '../pages/createProjectPage/models/project.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -86,13 +86,18 @@ class CustomNavigationDrawer extends StatelessWidget {
             _buildMenuItem(
                 context,
                 'Dashboard',
-              onTap: () {
-                _navigateTo(
+                onTap: () {
+                  Navigator.pop(context); // close the drawer first
+                  // Safe to push fresh — CreateProjectPage reads from ProjectStore, never loses data
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    "Dashboard",
-                    const CreateProjectPage(),
-                );
-              }
+                    MaterialPageRoute(
+                      builder: (_) => const CreateProjectPage(),
+                      settings: const RouteSettings(name: 'CreateProjectPage'),
+                    ),
+                        (route) => false,
+                  );
+                }
             ),
 
             _buildMenuItem(context, 'My Account'),
@@ -246,10 +251,15 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             Widget? nextPage;
 
-            if (title == 'Dashboard') {
-              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
-            } else if (title == 'Team Analytics') {
-              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 2);
+            if (title == 'Team Analytics') {
+              final projects = ProjectStore.instance.projects;
+              if (projects.isEmpty) {
+                // No project generated yet — send to create flow instead
+                nextPage = const CreateProjectScreen();
+              } else {
+                // Most recently added project (last in the list)
+                nextPage = ProductTaskPage(project: projects.last, initialTab: 2);
+              }
             } else if (title == 'My Account') {
               nextPage = const MyAccountScreen();
             } else if (title == 'New Project') {

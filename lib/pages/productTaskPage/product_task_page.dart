@@ -2,25 +2,20 @@ import 'package:flutter/material.dart';
 import 'models/product_task_module.dart';
 import 'widgets/product_task_card.dart';
 import '../createProjectPage/models/project.dart';
+import '../createProjectPage/models/project_store.dart';
 import '../../widgets/analytics_dashboard.dart';
 import '../../widgets/menu_button.dart';
 import '../../widgets/navigation_drawer.dart';
 
 class ProductTaskPage extends StatefulWidget {
-  // The project whose tasks this page displays. Title, member count,
-  // and the task list itself all come from this project now instead
-  // of being hard-coded or pulled from the old global fakeProductTasks list.
   final Project project;
 
-  // Optional — lets callers (like the navigation drawer) deep-link
-  // straight to a specific tab. 0=Overview, 1=Tasks, 2=Analytics.
-  // Defaults to 1 (Tasks) if not provided.
   final int initialTab;
 
   const ProductTaskPage({
     super.key,
     required this.project,
-    this.initialTab = 1,
+    this.initialTab = 0,
   });
 
   @override
@@ -28,17 +23,17 @@ class ProductTaskPage extends StatefulWidget {
 }
 
 class _ProductTaskPageState extends State<ProductTaskPage> {
-  late int _selectedTab; // seeded from widget.initialTab in initState
+  late int _selectedTab; // seeded from initialTab
 
   @override
   void initState() {
     super.initState();
-    _selectedTab = widget.initialTab; // tab content swaps inline, no navigation needed
+    _selectedTab = widget.initialTab;
   }
 
-  void _refresh() => setState(() {});
+  void _refresh() => setState(() => ProjectStore.instance.refresh());
 
-  // ── Opens the "Create New Task" bottom sheet ──────────────────
+  // Opens the "Create New Task" bottom sheet
   void _openCreateSheet() {
     showModalBottomSheet(
       context: context,
@@ -50,8 +45,10 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
       builder: (_) => _CreateTaskSheet(
         groups: widget.project.groups, // pass project groups into the sheet
         onCreated: (newTask) {
-          // Add the new task to THIS project's task list and rebuild
-          setState(() => widget.project.tasks.add(newTask));
+          setState(() {
+            widget.project.tasks.add(newTask);
+            ProjectStore.instance.refresh();
+          });
         },
       ),
     );
@@ -61,8 +58,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
-      // Shared app-wide drawer — MenuButton opens this by default
-      endDrawer: CustomNavigationDrawer(activePage: widget.project.title),
+      endDrawer: CustomNavigationDrawer(activePage: widget.project.title), // shared app drawer
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +92,6 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Project title comes from widget.project, not hard-coded
                 Text(
                   widget.project.title,
                   style: const TextStyle(
@@ -105,13 +100,12 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
                       color: Colors.black87),
                 ),
                 const SizedBox(height: 2),
-                Text('${widget.project.totalTasks} tasks · ${widget.project.memberCount} members',
+                Text('${widget.project.memberCount} members',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
               ],
             ),
           ),
-          // Builder gives MenuButton a context that's guaranteed to sit
-          // below the Scaffold, so Scaffold.of(context) can find it
+          // Builder gives MenuButton context
           Builder(
             builder: (context) => MenuButton(
               onPressed: () => Scaffold.of(context).openEndDrawer(),
@@ -162,8 +156,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  // Tab tap just switches which content shows below the header/tab bar —
-  // no navigation, no separate pages, no duplicate headers.
+  // Switch between tabs
   void _handleTabTap(int index) {
     setState(() => _selectedTab = index);
   }
@@ -173,7 +166,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
       case 0:  return _buildOverviewTab();
       case 1:  return _buildTasksTab();
       case 2:  return _buildAnalyticsTab();
-      default: return _buildTasksTab();
+      default: return _buildOverviewTab();
     }
   }
 
@@ -184,15 +177,20 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
       itemCount: tasks.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) return _buildCreateButton();
+        final task = tasks[index - 1];
         return ProductTaskCard(
-            task: tasks[index - 1], onUpdate: _refresh);
+          task: task,
+          onUpdate: _refresh,
+          onDelete: () => setState(() {
+            tasks.remove(task);
+            ProjectStore.instance.refresh(); // tell Dashboard to rebuild
+          }),
+        );
       },
     );
   }
 
-  // ── Overview tab content — same cards as ProjectOverviewScreen's
-  // Overview tab, rebuilt here so it renders under our shared header
-  // instead of that screen's own separate header.
+  // Overview tab content
   Widget _buildOverviewTab() {
     final project      = widget.project;
     final totalHours   = project.tasks.fold<double>(0, (sum, t) => sum + t.spentHours);
@@ -331,8 +329,7 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
     );
   }
 
-  // ── Analytics tab content — AnalyticsDashboard itself has no header
-  // of its own, so it drops in directly under our shared header/tab bar.
+  // Analytics tab content
   Widget _buildAnalyticsTab() {
     final project     = widget.project;
     final total       = project.totalTasks;
@@ -395,12 +392,9 @@ class _ProductTaskPageState extends State<ProductTaskPage> {
   }
 }
 
-// ── Create Task Bottom Sheet ──────────────────────────────────────
-// A self-contained widget so its own setState doesn't rebuild the whole page
+// Create Task Bottom Sheet
 class _CreateTaskSheet extends StatefulWidget {
   final ValueChanged<ProductTask> onCreated;
-  // Groups belonging to the project this task is being created in —
-  // lets the user pick an existing group instead of only creating new ones
   final List<TaskGroup> groups;
 
   const _CreateTaskSheet({required this.onCreated, required this.groups});
@@ -418,6 +412,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
   String   _selectedPriority     = 'Medium';
   DateTime _dueDateTime          = DateTime.now().add(const Duration(days: 7));
   TaskGroup? _selectedGroup;     // optional group picked from the project's groups
+  String? _estimatedTimeError;   // null = valid, otherwise shown under the field
 
   static const List<String> _priorityOptions = ['High', 'Medium', 'Low'];
 
@@ -460,7 +455,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
         child: child!,
       ),
     );
-    if (date == null) return;
+    if (date == null || !mounted) return; // bail if cancelled or widget gone
 
     final time = await showTimePicker(
       context: context,
@@ -472,7 +467,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
         child: child!,
       ),
     );
-    if (time == null) return;
+    if (time == null || !mounted) return; // bail if cancelled or widget gone
 
     setState(() {
       _dueDateTime = DateTime(
@@ -480,16 +475,28 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     });
   }
 
-  // Parses "2h", "30m", "1h 30m" into a numeric hour value for the progress bar
+  // True if input is empty (allowed) or matches a valid time format
+  bool _isValidEstimatedTime(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return true; // empty is allowed
+    return RegExp(r'^(\d+(\.\d+)?\s?h)?\s*(\d+\s?m)?$').hasMatch(trimmed.toLowerCase())
+        && trimmed.toLowerCase() != 'h' && trimmed.toLowerCase() != 'm';
+  }
+
+  // Strips spaces between number and unit, e.g. "2 h" -> "2h"
+  String _normalizeTimeFormat(String input) {
+    return input.trim().toLowerCase().replaceAllMapped(
+        RegExp(r'(\d)\s+([hm])'), (m) => '${m[1]}${m[2]}');
+  }
+
+  // Parses "2h", "30m", "1h 30m", "2 h" into hours for the progress bar
   double _parseEstimatedHours(String input) {
     final trimmed = input.trim().toLowerCase();
     if (trimmed.isEmpty) return 0;
     double total = 0;
-    // Match hours — e.g. "2h" or "1h"
-    final hoursMatch = RegExp(r'(\d+(\.\d+)?)h').firstMatch(trimmed);
+    final hoursMatch = RegExp(r'(\d+(\.\d+)?)\s?h').firstMatch(trimmed); // e.g. "2h" or "2 h"
     if (hoursMatch != null) total += double.parse(hoursMatch.group(1)!);
-    // Match minutes — e.g. "30m"
-    final minsMatch = RegExp(r'(\d+)m').firstMatch(trimmed);
+    final minsMatch = RegExp(r'(\d+)\s?m').firstMatch(trimmed); // e.g. "30m" or "30 m"
     if (minsMatch != null) total += int.parse(minsMatch.group(1)!) / 60;
     return total;
   }
@@ -498,7 +505,14 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
   void _submit() {
     if (_titleController.text.trim().isEmpty) return; // title is required
 
-    final estText  = _estimatedTimeController.text.trim();
+    final rawText = _estimatedTimeController.text.trim();
+    if (!_isValidEstimatedTime(rawText)) {
+      setState(() => _estimatedTimeError = 'Use format like 2h, 30m, or 1h 30m');
+      return; // block creation until fixed
+    }
+    setState(() => _estimatedTimeError = null);
+
+    final estText  = _normalizeTimeFormat(rawText); // e.g. "2 h" -> "2h"
     final estHours = _parseEstimatedHours(estText);
 
     final newTask = ProductTask(
@@ -521,7 +535,6 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
 
   @override
   void dispose() {
-    // Always dispose controllers to free memory
     _titleController.dispose();
     _descriptionController.dispose();
     _estimatedTimeController.dispose();
@@ -531,16 +544,15 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      // Sheet rises above the keyboard automatically
       padding: EdgeInsets.fromLTRB(
-          20, 24, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+          20, 24, 20, MediaQuery.of(context).viewInsets.bottom + 24), // rises above keyboard
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // ── Sheet handle + title ──
+            // Sheet handle + title
             Center(
               child: Container(
                 width: 40, height: 4,
@@ -558,7 +570,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
                     color: Colors.black87)),
             const SizedBox(height: 24),
 
-            // ── Task name ──
+            // Task name
             _fieldLabel('Task Name *'),
             const SizedBox(height: 8),
             _textField(
@@ -567,7 +579,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Description ──
+            // Description
             _fieldLabel('Description'),
             const SizedBox(height: 8),
             _textField(
@@ -577,7 +589,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Due date & time ──
+            // Due date & time
             _fieldLabel('Due Date & Time'),
             const SizedBox(height: 8),
             GestureDetector(
@@ -610,7 +622,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Priority ──
+            // Priority
             _fieldLabel('Priority'),
             const SizedBox(height: 8),
             Row(
@@ -644,7 +656,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             ),
             const SizedBox(height: 16),
 
-            // ── Group picker — only shown if the project has groups ──
+            // Group picker — only shown if the project has groups
             if (widget.groups.isNotEmpty) ...[
               _fieldLabel('Group'),
               const SizedBox(height: 8),
@@ -691,7 +703,7 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
               const SizedBox(height: 16),
             ],
 
-            // ── Estimated time ──
+            // Estimated time
             _fieldLabel('Estimated Time'),
             const SizedBox(height: 4),
             Text('e.g. 30m, 2h, 1h 30m',
@@ -700,10 +712,18 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
             _textField(
               controller: _estimatedTimeController,
               hint: 'e.g. 2h',
+              onChanged: (_) {
+                if (_estimatedTimeError != null) setState(() => _estimatedTimeError = null);
+              },
             ),
+            if (_estimatedTimeError != null) ...[
+              const SizedBox(height: 6),
+              Text(_estimatedTimeError!,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444))),
+            ],
             const SizedBox(height: 28),
 
-            // ── Create button ──
+            // Create button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -741,10 +761,12 @@ class _CreateTaskSheetState extends State<_CreateTaskSheet> {
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    ValueChanged<String>? onChanged,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
