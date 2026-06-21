@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/project.dart';
-import '../project_detail_page.dart';
+import '../../productTaskPage/product_task_page.dart';
 
 class ProjectCard extends StatelessWidget {
   final Project project;
@@ -22,11 +22,13 @@ class ProjectCard extends StatelessWidget {
     // GestureDetector makes the whole card tappable
     return GestureDetector(
       onTap: () async {
-        // Navigate to the detail page and wait for it to pop back
+        // Navigate to the full task list page, scoped to this project.
+        // This reuses the exact same Tasks-tab UI (cards, status badges,
+        // overdue dates, groups) that the Product Launch page uses.
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ProjectDetailPage(project: project),
+            builder: (_) => ProductTaskPage(project: project),
           ),
         );
         // When user comes back, tell the parent to rebuild
@@ -83,6 +85,8 @@ class ProjectCard extends StatelessWidget {
             const SizedBox(height: 8),
 
             // ── Progress bar ───────────────────────────────────────
+            // Same calculation as before — now driven by ProductTask
+            // statuses via project.progress under the hood
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
@@ -135,6 +139,43 @@ class ProjectCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            // ── Group chips — only shown if the project has groups ──
+            // Gives a quick visual preview of which teams/areas this
+            // project touches, straight from the AI-generated groups
+            if (project.groups.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: project.groups.map((g) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: g.color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6, height: 6,
+                          decoration: BoxDecoration(
+                              color: g.color, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(g.name,
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: g.color)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ],
         ),
       ),

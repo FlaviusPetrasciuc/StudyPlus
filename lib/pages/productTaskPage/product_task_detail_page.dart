@@ -371,11 +371,10 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (groupName.trim().isEmpty) return;
+                    final newGroup = TaskGroup(
+                        name: groupName.trim(), color: selectedColor);
                     // Save into draft only — not yet into widget.task
-                    setState(() {
-                      _draftGroup = TaskGroup(
-                          name: groupName.trim(), color: selectedColor);
-                    });
+                    setState(() => _draftGroup = newGroup);
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(

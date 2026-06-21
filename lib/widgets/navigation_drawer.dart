@@ -8,6 +8,7 @@ import '../screens/project_calendar_screen.dart';
 import '../screens/project_details.dart';
 import '../pages/productTaskPage/product_task_page.dart';
 import '../screens/my_account_screen.dart';
+import '../pages/createProjectPage/models/project.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   final String? activePage;
@@ -93,7 +94,7 @@ class CustomNavigationDrawer extends StatelessWidget {
                 );
               }
             ),
-            
+
             _buildMenuItem(context, 'My Account'),
 
             _buildMenuItem(
@@ -246,11 +247,9 @@ class CustomNavigationDrawer extends StatelessWidget {
             Widget? nextPage;
 
             if (title == 'Dashboard') {
-              nextPage = const ProductTaskPage(initialTab: 1);
+              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 1);
             } else if (title == 'Team Analytics') {
-              nextPage = const ProductTaskPage(initialTab: 2);
-            } else if (title == 'Dashboard') {
-              nextPage = const ProductTaskPage(initialTab: 1);
+              nextPage = ProductTaskPage(project: Project.sample(), initialTab: 2);
             } else if (title == 'My Account') {
               nextPage = const MyAccountScreen();
             } else if (title == 'New Project') {
