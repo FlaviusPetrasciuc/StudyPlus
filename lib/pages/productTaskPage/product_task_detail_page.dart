@@ -802,14 +802,7 @@ class _ProductTaskDetailPageState extends State<ProductTaskDetailPage> {
                     child: Text('Task Assignment',
                         style: TextStyle(fontSize: 18,
                             fontWeight: FontWeight.w700, color: Colors.black87)),
-                  ),
-                  Container(
-                    width: 40, height: 40,
-                    decoration: const BoxDecoration(
-                        color: Color(0xFF2563EB), shape: BoxShape.circle),
-                    child: const Icon(Icons.menu,
-                        color: Colors.white, size: 20),
-                  ),
+                  )
                 ],
               ),
             ),
