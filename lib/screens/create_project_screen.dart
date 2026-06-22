@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
-import '../models/generated_task.dart';
-import '../services/ai_plan_service.dart';
+import 'package:study_plus/services/ai_plan_service.dart';
+import 'package:study_plus/services/project_service.dart';
+import 'package:study_plus/pages/createProjectPage/create_project_page.dart';
+import 'package:study_plus/pages/createProjectPage/models/project_store.dart';
+import 'package:study_plus/pages/createProjectPage/models/project.dart';
+import 'package:study_plus/widgets/ai_loading_screen.dart';
+import 'package:study_plus/widgets/menu_button.dart';
+import 'package:study_plus/widgets/navigation_drawer.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -15,9 +21,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
   final AiPlanService aiPlanService = AiPlanService();
 
-  bool isLoading = false;
   String? errorMessage;
-  List<GeneratedTask> generatedTasks = [];
 
   @override
   void dispose() {
@@ -59,30 +63,63 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   }
 
   Future<void> generateAiPlan() async {
+    final existingProjects = ProjectStore.instance.projects;
+
+    if (existingProjects.isNotEmpty) {
+      setState(() {
+        errorMessage =
+        'You already have one AI-generated project. Delete the previous project before creating a new one.';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Delete the previous project before generating a new one.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
     if (!validateInput()) return;
 
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-      generatedTasks = [];
-    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AILoadingScreen(),
+      ),
+    );
 
     try {
-      final tasks = await aiPlanService.generatePlan(
+      final projectPlan = await aiPlanService.generatePlan(
         title: projectNameController.text.trim(),
         details: projectDetailsController.text.trim(),
       );
 
-      setState(() {
-        generatedTasks = tasks;
-      });
+      if (!mounted) return;
+
+      Navigator.pop(context);
+
+      final project = Project.fromProjectPlan(projectPlan);
+
+      ProjectStore.instance.addProject(project);
+      ProjectService().addProject(projectPlan);
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CreateProjectPage(),
+        ),
+            (route) => false,
+      );
     } catch (e) {
+      if (!mounted) return;
+
+      Navigator.pop(context);
+
       setState(() {
-        errorMessage = 'Failed to generate plan. Make sure your backend is running.';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
+        errorMessage = 'Error: $e';
       });
     }
   }
@@ -91,53 +128,26 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F5FA),
+      endDrawer: CustomNavigationDrawer(activePage: 'New Project'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text(
-                      'Back',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0A84FF),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.18),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.menu,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: Builder(
+                  builder: (context) {
+                    return MenuButton(
+                      onPressed: () {
+                        Scaffold.of(context).openEndDrawer();
+                      },
+                    );
+                  },
+                ),
               ),
-
               const SizedBox(height: 28),
-
               const Text(
                 'Create New Project',
                 style: TextStyle(
@@ -146,9 +156,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   color: Color(0xFF202124),
                 ),
               ),
-
               const SizedBox(height: 10),
-
               const Text(
                 'Provide your project details and let AI create a\nstructured 8-week plan',
                 style: TextStyle(
@@ -157,9 +165,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   color: Color(0xFF8E8E93),
                 ),
               ),
-
               const SizedBox(height: 36),
-
               _InputCard(
                 title: 'Project Name',
                 child: TextField(
@@ -169,9 +175,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 28),
-
               _InputCard(
                 title: 'Project Details',
                 child: Column(
@@ -181,7 +185,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       controller: projectDetailsController,
                       maxLines: 10,
                       decoration: _inputDecoration(
-                        hintText: 'Paste or input all available project information',
+                        hintText:
+                        'Paste or input all available project information',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -196,9 +201,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
               if (errorMessage != null)
                 Text(
                   errorMessage!,
@@ -208,27 +211,16 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
               const SizedBox(height: 20),
-
               SizedBox(
                 width: double.infinity,
                 height: 68,
                 child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : generateAiPlan,
-                  icon: isLoading
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                      : const Icon(Icons.auto_awesome, size: 26),
-                  label: Text(
-                    isLoading ? 'Generating Plan...' : 'Generate AI Plan',
-                    style: const TextStyle(
+                  onPressed: generateAiPlan,
+                  icon: const Icon(Icons.auto_awesome, size: 26),
+                  label: const Text(
+                    'Generate AI Plan',
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -243,41 +235,6 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 30),
-
-              if (generatedTasks.isNotEmpty)
-                const Text(
-                  'Generated 8-Week Plan',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF202124),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: generatedTasks.length,
-                itemBuilder: (context, index) {
-                  final task = generatedTasks[index];
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      title: Text(
-                        'Week ${task.week}, Day ${task.day}: ${task.title}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      subtitle: Text(task.description),
-                      trailing: Text('${task.estimatedHours}h'),
-                    ),
-                  );
-                },
               ),
             ],
           ),

@@ -10,9 +10,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^2.5.0",
+    "@supabase/supabase-js": "^2.106.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
-    "openai": "^4.56.0"
+    "openai": "^4.56.0",
+    "ws": "^8.21.0"
   }
 }
