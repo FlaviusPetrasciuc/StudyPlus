@@ -81,14 +81,10 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 children: [
                   Row(
                     children: [
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1C1E)),
-                      ),
                       const Text(
                         'My Account',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1C1E),
                         ),
