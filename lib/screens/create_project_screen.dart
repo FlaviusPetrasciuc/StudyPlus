@@ -160,7 +160,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Provide your project details and \n let AI create a structured 8-week \n plan',
+                  'Provide your project details and\nlet AI create a structured 8-week\nplan',
                   style: TextStyle(
                     fontSize: 18,
                     height: 1.4,
