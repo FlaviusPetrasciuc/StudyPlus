@@ -130,41 +130,43 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       backgroundColor: const Color(0xFFF4F5FA),
       endDrawer: CustomNavigationDrawer(activePage: 'New Project'),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: Builder(
-                  builder: (context) {
-                    return MenuButton(
-                      onPressed: () {
-                        Scaffold.of(context).openEndDrawer();
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Row with title and menu button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Create New Project',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF202124),
+                      ),
+                    ),
+                    Builder(
+                      builder: (context) {
+                        return MenuButton(
+                          onPressed: () {
+                            Scaffold.of(context).openEndDrawer();
+                          },
+                        );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'Create New Project',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF202124),
+                const SizedBox(height: 10),
+                const Text(
+                  'Provide your project details and\nlet AI create a structured 8-week\nplan',
+                  style: TextStyle(
+                    fontSize: 18,
+                    height: 1.4,
+                    color: Color(0xFF8E8E93),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Provide your project details and let AI create a\nstructured 8-week plan',
-                style: TextStyle(
-                  fontSize: 18,
-                  height: 1.4,
-                  color: Color(0xFF8E8E93),
-                ),
-              ),
               const SizedBox(height: 36),
               _InputCard(
                 title: 'Project Name',

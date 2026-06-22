@@ -147,8 +147,15 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                           Text(
                             "Manage and track your ongoing work",
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            "Note: only 1 project is supported",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.blue,
                             ),
                           ),
                         ],

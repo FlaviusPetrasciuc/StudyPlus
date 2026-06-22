@@ -3,6 +3,8 @@ import '../auth/auth_service.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/navigation_drawer.dart';
 import '../pages/createProjectPage/models/project_store.dart';
+import '../pages/createProjectPage/models/project.dart';
+import '../pages/productTaskPage/product_task_page.dart';
 
 class MyAccountScreen extends StatefulWidget {
   const MyAccountScreen({super.key});
@@ -81,14 +83,10 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 children: [
                   Row(
                     children: [
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1C1E)),
-                      ),
                       const Text(
                         'My Account',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1C1E),
                         ),
@@ -192,7 +190,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                   ),
                 )
               else
-                ...projects.map((project) => _buildProjectItem(project.title, 'Project Member')).toList(),
+                ...projects.map((project) => _buildProjectItem(context, project, 'Project Member')).toList(),
 
               const SizedBox(height: 32),
 
@@ -310,49 +308,65 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     );
   }
 
-  Widget _buildProjectItem(String title, String role) {
+  Widget _buildProjectItem(BuildContext context, Project project, String role) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F5FA),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.folder_shared_outlined, color: Color(0xFF007AFF), size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductTaskPage(project: project),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Color(0xFF1A1C1E),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F5FA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.folder_shared_outlined, color: Color(0xFF007AFF), size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        project.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Color(0xFF1A1C1E),
+                        ),
+                      ),
+                      Text(
+                        role,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6C7278),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  role,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF6C7278),
-                  ),
-                ),
+                const Icon(Icons.chevron_right, color: Color(0xFFD1D5DB)),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: Color(0xFFD1D5DB)),
-        ],
+        ),
       ),
     );
   }
